@@ -15,18 +15,18 @@ public class RealtimeChartRecorder : MonoBehaviour
     public Transform spawnPointLane2;
     public Transform hitZone;
 
-    [Tooltip("ความเร็วพรีวิว (หน่วย/วินาที) ใช้คำนวณเวลาที่จะถึง Hitzone")]
+  
     public float previewSpeed = 7f;
 
-    [Tooltip("เวลาขั้นต่ำเพื่อกันวาร์ป (วินาที)")]
+ 
     public float minPreviewDuration = 0.08f;
 
     [Header("Clock")]
-    [Tooltip("ให้เวลาเดินต่อแม้ Time.timeScale = 0")]
+   
     public bool useUnscaledTime = false;
 
     [Header("CSV")]
-    [Tooltip("ชื่อไฟล์ (จะถูกบันทึกไว้ในโฟลเดอร์ Assets/)")]
+   
     public string saveFileName = "my_chart.csv";
 
     [Header("Debug")]
