@@ -22,7 +22,7 @@ public class MissZone : MonoBehaviour
         Ranking.Instance?.ResetToFirstRank();
 
         // ดีบักไว้ดูเวลาและเลน
-        Debug.LogWarning($"MISS | lane {m.lane} | t={Time.time:0.000}s");
+        Debug.LogWarning($"MISS | lane {m.lane}s");
 
 
     }
