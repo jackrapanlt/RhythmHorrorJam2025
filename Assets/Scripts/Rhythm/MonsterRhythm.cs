@@ -99,9 +99,14 @@ public class MonsterRhythm : MonoBehaviour, IHittable
 
     }
 
-   
+    public void MarkHit()
+    {
+        WasHit = true;
+    }
+
     public void Die()
     {
+        WasHit = true;
         Destroy(gameObject);
     }
 }

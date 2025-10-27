@@ -13,8 +13,10 @@ public class HitZone : MonoBehaviour
     [Header("Refs")]
     public Player player;
 
-    
-    private readonly List<IHittable> inside = new();
+    [SerializeField] private HP_Stamina hp;
+    [SerializeField] private int staminaGainOnHit = 5;
+
+    private readonly List<IHittable> inside = new();   
 
     private void Reset()
     {
@@ -99,11 +101,20 @@ public class HitZone : MonoBehaviour
          
             if (m.lane == player.currentLane)
             {
-                h.Die();               
+                h.Die();
+                if (hp != null) {hp.GainStamina(staminaGainOnHit);}
+
+                int baseScore = (Score.Instance != null) ? Score.Instance.addScore : 10;
+                if (Ranking.Instance != null)
+                    Ranking.Instance.ApplyHitToScore(baseScore);
+                else
+                    Score.Instance?.AddScore(baseScore);
+
                 inside.RemoveAt(i);
-                Debug.Log("score+1");
                 break;                  
             }
         }
     }
+
+
 }
