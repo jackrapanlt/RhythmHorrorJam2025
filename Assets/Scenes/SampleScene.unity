@@ -2846,7 +2846,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   chartCsv: {fileID: 4900000, guid: 18d92c8c0d1b9f7449fd3299835f6101, type: 3}
-  monsterPrefab: {fileID: 5206566457705220235, guid: d1a287f33a9a88d438a0b14023b9b147, type: 3}
+  monsterPrefabs:
+  - {fileID: 5206566457705220235, guid: d1a287f33a9a88d438a0b14023b9b147, type: 3}
+  - {fileID: 5206566457705220235, guid: 0ef72402ca8f5bc40aee3f5a14862701, type: 3}
+  - {fileID: 5206566457705220235, guid: 6216fa87d3aae0b4f85a1bcc25c93ff5, type: 3}
   spawnPoint1: {fileID: 413475178}
   spawnPoint2: {fileID: 1037953357}
   hitZone: {fileID: 1350827716}
