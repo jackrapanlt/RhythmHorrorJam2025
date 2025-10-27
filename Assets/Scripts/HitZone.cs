@@ -16,6 +16,17 @@ public class HitZone : MonoBehaviour
     [SerializeField] private HP_Stamina hp;
     [SerializeField] private int staminaGainOnHit = 5;
 
+    [Header("Judgement Windows (seconds)")]
+    [SerializeField] private float perfectWindow = 0.05f;  // 50 ms
+    [SerializeField] private float greatWindow = 0.12f;  // 120 ms
+    [SerializeField] private float passWindow = 0.22f;  // 220 ms
+
+    [Header("Score per Judgement")]
+    [SerializeField] private int scorePerfect = 3;
+    [SerializeField] private int scoreGreat = 2;
+    [SerializeField] private int scorePass = 1;
+
+
     private readonly List<IHittable> inside = new();   
 
     private void Reset()
@@ -83,37 +94,60 @@ public class HitZone : MonoBehaviour
         inside.Remove(h);
     }
 
-   
     void TryHit()
     {
         if (inside.Count == 0 || player == null) return;
 
         
-        for (int i = inside.Count - 1; i >= 0; i--)
+        MonsterRhythm best = null;
+        IHittable bestH = null;
+        float bestOffset = float.MaxValue;
+
+        
+        float now = Time.time;
+
+        foreach (var h in inside)
         {
-            var h = inside[i];
             var comp = h as Component;
-            if (!comp) { inside.RemoveAt(i); continue; }
+            if (!comp) continue;
 
             var m = comp.GetComponent<MonsterRhythm>();
-            if (!m) continue;
+            if (!m || m.lane != player.currentLane) continue;
 
-         
-            if (m.lane == player.currentLane)
+            float offset = Mathf.Abs(now - m.scheduledHitTime);
+            if (offset < bestOffset)
             {
-                h.Die();
-                if (hp != null) {hp.GainStamina(staminaGainOnHit);}
-
-                int baseScore = (Score.Instance != null) ? Score.Instance.addScore : 10;
-                if (Ranking.Instance != null)
-                    Ranking.Instance.ApplyHitToScore(baseScore);
-                else
-                    Score.Instance?.AddScore(baseScore);
-
-                inside.RemoveAt(i);
-                break;                  
+                bestOffset = offset;
+                best = m;
+                bestH = h;
             }
         }
+
+        if (best == null) return;
+
+        
+        if (bestOffset <= perfectWindow)
+        {
+            Ranking.Instance?.ApplyHitToScore(scorePerfect);
+            Debug.Log($"Perfect (+{scorePerfect})");
+            bestH.Die();
+            inside.Remove(bestH);
+        }
+        else if (bestOffset <= greatWindow)
+        {
+            Ranking.Instance?.ApplyHitToScore(scoreGreat);
+            Debug.Log($"Great (+{scoreGreat})");
+            bestH.Die();
+            inside.Remove(bestH);
+        }
+        else if (bestOffset <= passWindow)
+        {
+            Ranking.Instance?.ApplyHitToScore(scorePass);
+            Debug.Log($"Pass (+{scorePass})");
+            bestH.Die();
+            inside.Remove(bestH);
+        }
+        
     }
 
 

@@ -45,9 +45,9 @@ public class ChartOnlySpawner : MonoBehaviour
 
     private void Awake()
     {
-        if (!monsterPrefab) Debug.LogError("[ChartOnlySpawner] monsterPrefab missing.");
-        if (!spawnPoint1 || !spawnPoint2) Debug.LogError("[ChartOnlySpawner] spawn points missing.");
-        if (!hitZone) Debug.LogError("[ChartOnlySpawner] hitZone missing.");
+        if (!monsterPrefab) Debug.LogError("monsterPrefab missing.");
+        if (!spawnPoint1 || !spawnPoint2) Debug.LogError("spawn points missing.");
+        if (!hitZone) Debug.LogError("hitZone missing.");
 
         ParseChart(chartCsv);
     }

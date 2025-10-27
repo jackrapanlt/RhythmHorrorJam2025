@@ -7,15 +7,14 @@ public class InputManager : MonoBehaviour
 {
     public static InputManager Instance { get; private set; }
 
-    public event Action OnSwitchUp;
-    public event Action OnSwitchDown;
-    public event Action OnHit;
-    public event Action OnUltimate;
-
+    // Events
+    public event Action OnSwitchLane;  
+    public event Action OnHit;         
+    public event Action OnUltimate;    
     public static event Action EscPressed;
 
-    private InputAction actionSwitchUp;
-    private InputAction actionSwitchDown;
+    // Input Actions
+    private InputAction actionSwitchLane;
     private InputAction actionHit;
     private InputAction actionUltimate;
     private InputAction actionEsc;
@@ -26,34 +25,38 @@ public class InputManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        actionSwitchUp = new InputAction("SwitchUp", binding: "<Keyboard>/w");
-        actionSwitchDown = new InputAction("SwitchDown", binding: "<Keyboard>/s");
-        actionHit = new InputAction("Hit", binding: "<Keyboard>/space");
+        //Toggle Lane
+        actionSwitchLane = new InputAction("SwitchLane", binding: "<Keyboard>/s");
+
+        // Hit
+        actionHit = new InputAction("Hit");
+        actionHit.AddBinding("<Keyboard>/k");
+        actionHit.AddBinding("<Keyboard>/l");
+
+     
         actionUltimate = new InputAction("Ultimate", binding: "<Keyboard>/e");
         actionEsc = new InputAction("Esc", InputActionType.Button, "<Keyboard>/escape");
 
-        actionSwitchUp.performed += _ => { Debug.Log("[Input] W"); OnSwitchUp?.Invoke(); };
-        actionSwitchDown.performed += _ => { Debug.Log("[Input] S"); OnSwitchDown?.Invoke(); };
-        actionHit.performed += _ => { Debug.Log("[Input] Space"); OnHit?.Invoke(); };
-        actionUltimate.performed += _ => { Debug.Log("[Input] E"); OnUltimate?.Invoke(); };
-        actionEsc.performed += _ => { Debug.Log("[Input] Esc"); EscPressed?.Invoke(); };
+        // Subscribe
+        actionSwitchLane.performed += _ => OnSwitchLane?.Invoke();
+        actionHit.performed += _ => OnHit?.Invoke();
+        actionUltimate.performed += _ => OnUltimate?.Invoke();
+        actionEsc.performed += _ => EscPressed?.Invoke();
     }
 
     private void OnEnable()
     {
-        actionSwitchUp.Enable();
-        actionSwitchDown.Enable();
+        actionSwitchLane.Enable();
         actionHit.Enable();
         actionUltimate.Enable();
-        actionEsc?.Enable();
+        actionEsc.Enable();
     }
 
     private void OnDisable()
     {
-        actionSwitchUp.Disable();
-        actionSwitchDown.Disable();
+        actionSwitchLane.Disable();
         actionHit.Disable();
         actionUltimate.Disable();
-        actionEsc?.Disable();
+        actionEsc.Disable();
     }
 }
