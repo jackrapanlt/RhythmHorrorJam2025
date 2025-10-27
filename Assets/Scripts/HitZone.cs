@@ -21,12 +21,6 @@ public class HitZone : MonoBehaviour
     [SerializeField] private float greatWindow = 0.12f;  
     [SerializeField] private float passWindow = 0.22f;  
 
-    [Header("Score per Judgement")]
-    [SerializeField] private int scorePerfect = 3;
-    [SerializeField] private int scoreGreat = 2;
-    [SerializeField] private int scorePass = 1;
-
-
     private readonly List<IHittable> inside = new();   
 
     private void Reset()
@@ -135,22 +129,37 @@ public class HitZone : MonoBehaviour
 
         //Score//
 
-        if (bestOffset <= perfectWindow)
+        if (bestOffset <= perfectWindow) //perfect
         {
-            Ranking.Instance?.ApplyHitToScore(scorePerfect);
-            Debug.Log($"Perfect (+{scorePerfect})");
+            if (hp != null) { hp.GainStamina(staminaGainOnHit); }
+            if (Ranking.Instance != null)
+                Ranking.Instance.ApplyHitToScore(Score.Instance.GetBaseScore(JudgementType.Perfect));
+            else
+                Score.Instance?.AddScore(Score.Instance.GetBaseScore(JudgementType.Perfect));
+
+            Debug.Log($"Perfect");
             (best as IHittable)?.Die();
         }
-        else if (bestOffset <= greatWindow)
+        else if (bestOffset <= greatWindow) //great
         {
-            Ranking.Instance?.ApplyHitToScore(scoreGreat);
-            Debug.Log($"Great (+{scoreGreat})");
+            if (hp != null) { hp.GainStamina(staminaGainOnHit); }
+            if (Ranking.Instance != null)
+                Ranking.Instance.ApplyHitToScore(Score.Instance.GetBaseScore(JudgementType.Great));
+            else
+                Score.Instance?.AddScore(Score.Instance.GetBaseScore(JudgementType.Great));
+
+            Debug.Log($"Great");
             (best as IHittable)?.Die();
         }
-        else if (bestOffset <= passWindow)
+        else if (bestOffset <= passWindow) //pass
         {
-            Ranking.Instance?.ApplyHitToScore(scorePass);
-            Debug.Log($"Pass (+{scorePass})");
+            if (hp != null) { hp.GainStamina(staminaGainOnHit); }
+            if (Ranking.Instance != null)
+                Ranking.Instance.ApplyHitToScore(Score.Instance.GetBaseScore(JudgementType.Pass));
+            else
+                Score.Instance?.AddScore(Score.Instance.GetBaseScore(JudgementType.Pass));
+
+            Debug.Log($"Pass");
             (best as IHittable)?.Die();
         }
  
@@ -169,3 +178,5 @@ public class HitZone : MonoBehaviour
     }
 
 }
+
+

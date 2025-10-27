@@ -5,19 +5,23 @@ using UnityEngine.UI;
 
 public class Ultimate : MonoBehaviour
 {
-    [Header("Refs (ผูกอย่างน้อยหนึ่งอย่าง)")]
+    [Header("Refs")]
     [SerializeField] private HP_Stamina hp;    // ใช้เช็ค/หักสแตมินา และ +สแตมินาเมื่อ “นับเป็น Hit”
-    [SerializeField] private Slider stamina;   // fallback: ใช้สไลเดอร์โดยตรง (Value 1 = 100)
-    [SerializeField] private Player player;    // ใช้เลือกเป้าหมายใกล้ตัว (ทางเลือก)
+    [SerializeField] private Slider stamina;  
+    [SerializeField] private Player player;   
 
     [Header("Cost & Flow")]
-    [SerializeField] private int cost = 100;           // ใช้ได้เมื่อ >= 100
-    [SerializeField] private int maxKills = 10;        // พยายามทำลายสูงสุด 10 ตัว
-    [SerializeField] private float intervalSeconds = 0.5f; // ห่างกันตัวละ 0.5 วิ (รวม ~5 วิ)
+    [SerializeField] private int cost = 100;                // ใช้ได้เมื่อ >= 100
+    [SerializeField] private int maxKills = 10;             // พยายามทำลายสูงสุด 10 ตัว
+    [SerializeField] private float intervalSeconds = 0.5f;  // ห่างกันตัวละ 0.5 วิ (รวม ~5 วิ)
 
-    [Header("Hit Simulation (ให้เหมือน HitZone.TryHit)")]
-    [SerializeField] private int staminaGainPerUltimateHit = 5; // +สแตมินาต่อการกำจัด 1 ตัว เหมือน HitZone
+    [Header("Hit Simulation")]
+    [SerializeField] private int staminaGainPerUltimateHit = 5; // +สแตมินาต่อการกำจัด 1 ตัว
 
+    [Header("Ultimate Scoring")]
+    [SerializeField] private bool useCustomUltimateBaseScore = false; 
+    [SerializeField] private int ultimateBaseScore = 5;              
+    [SerializeField] private JudgementType ultimateJudgement = JudgementType.Great;
     private bool isRunning;
 
     private void Awake()
@@ -43,7 +47,7 @@ public class Ultimate : MonoBehaviour
         if (isRunning) return;
         if (!CanUse()) return;
 
-        // หักสแตมินาทันทีเพื่อกันสแปม
+        // หักสแตมินาทันทีกันสแปม
         SpendCost();
 
         StartCoroutine(CoUltimate());
@@ -101,25 +105,37 @@ public class Ultimate : MonoBehaviour
             {
                 // === ทำให้ “นับเหมือน HitZone.TryHit()” ===
 
-                // 1) กัน MISS ภายหลัง
-                target.MarkHit();
+                // 1) กัน MISS ภายหลัง (ถ้าคลาสคุณมีเมทอดนี้)
+                try { target.MarkHit(); } catch { /* ignore if not available */ }
 
                 // 2) บวกสแตมินาเหมือนโดนใน HitZone
                 hp?.GainStamina(staminaGainPerUltimateHit);
 
-                // 3) คูณคะแนนด้วย Ranking แล้วส่งให้ Score
-                int baseScore = (Score.Instance != null) ? Score.Instance.addScore : 10;
+                // 3) คำนวณคะแนนพื้นฐานของ Ultimate
+                int baseScore;
+                if (useCustomUltimateBaseScore)
+                {
+                    baseScore = ultimateBaseScore; // ใช้คะแนนเฉพาะของ Ultimate
+                }
+                else
+                {
+                    baseScore = (Score.Instance != null)
+                        ? Score.Instance.GetBaseScore(ultimateJudgement)   // ใช้ Judgement ที่กำหนด
+                        : 0;
+                }
+
+                // ให้ Ranking เป็นคนคูณแล้วส่งเข้า Score
                 if (Ranking.Instance != null)
                     Ranking.Instance.ApplyHitToScore(baseScore);
                 else
                     Score.Instance?.AddScore(baseScore);
 
-                // 4) ทำลายเป้าหมาย (เหมือนเรียก IHittable.Die() ใน TryHit)
+              
                 var hittable = target as IHittable;
                 if (hittable != null) hittable.Die();
                 else Destroy(target.gameObject);
 
-                Debug.Log($"ULTIMATE {i}/{maxKills} (counted as Hit)");
+                Debug.Log($"ULTIMATE {i}/{maxKills} (counted as Hit, base={baseScore})");
             }
             else
             {

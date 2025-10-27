@@ -1,20 +1,26 @@
 ﻿using UnityEngine;
 using TMPro;
 
+public enum JudgementType { Perfect, Great, Pass }
+
 public class Score : MonoBehaviour
 {
     public static Score Instance { get; private set; }
 
     [Header("UI")]
-    [SerializeField] private TMP_Text scoreText;     // ลาก TextMeshProUGUI/TMP_Text มาวางที่นี่
+    [SerializeField] private TMP_Text scoreText;
 
     [Header("Label")]
-    [SerializeField] private string label = "SCORE : "; // คำขึ้นต้นก่อนตัวเลข
+    [SerializeField] private string label = "SCORE : ";
 
-    [Header("Config")]
-    public int addScore = 10;                        // คะแนนต่อ 1 ครั้งที่โดน Hit
+    [Header("Base Score Settings")]
+    [SerializeField] private int scorePerfect = 3;
+    [SerializeField] private int scoreGreat = 2;
+    [SerializeField] private int scorePass = 1;
+
+    [Header("Formatting")]
     [SerializeField] private bool padWithZeros = false;
-    [SerializeField] private int padDigits = 6;      // ใช้เมื่อ padWithZeros = true เช่น 000010
+    [SerializeField] private int padDigits = 6;
 
     public int CurrentScore { get; private set; }
 
@@ -22,13 +28,22 @@ public class Score : MonoBehaviour
     {
         if (Instance && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
-        // ถ้าต้องการให้คะแนนไม่หายตอนเปลี่ยนฉาก ให้เปิดบรรทัดนี้
-        // DontDestroyOnLoad(gameObject);
     }
 
     private void Start()
     {
         RefreshText();
+    }
+
+    public int GetBaseScore(JudgementType type)
+    {
+        return type switch
+        {
+            JudgementType.Perfect => scorePerfect,
+            JudgementType.Great => scoreGreat,
+            JudgementType.Pass => scorePass,
+            _ => 0
+        };
     }
 
     public void AddScore(int amount)
@@ -53,18 +68,10 @@ public class Score : MonoBehaviour
     {
         if (!scoreText) return;
 
-        string number = padWithZeros
+        string num = padWithZeros
             ? CurrentScore.ToString(new string('0', Mathf.Max(1, padDigits)))
             : CurrentScore.ToString();
 
-        scoreText.text = string.Concat(label, number);
+        scoreText.text = label + num;
     }
-
-#if UNITY_EDITOR
-    private void OnValidate()
-    {
-        if (Application.isPlaying) return;
-        RefreshText();
-    }
-#endif
 }

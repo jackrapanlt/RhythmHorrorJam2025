@@ -321,7 +321,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Score
   scoreText: {fileID: 920474595}
   label: 'SCORE : '
-  addScore: 10
+  scorePerfect: 3
+  scoreGreat: 2
+  scorePass: 1
   padWithZeros: 1
   padDigits: 6
 --- !u!1 &134261973
@@ -732,6 +734,9 @@ MonoBehaviour:
   maxKills: 10
   intervalSeconds: 0.1
   staminaGainPerUltimateHit: 5
+  useCustomUltimateBaseScore: 1
+  ultimateBaseScore: 3
+  ultimateJudgement: 2
 --- !u!1 &189575089
 GameObject:
   m_ObjectHideFlags: 0
