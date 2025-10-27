@@ -14,9 +14,9 @@ public class Score : MonoBehaviour
     [SerializeField] private string label = "SCORE : ";
 
     [Header("Base Score Settings")]
-    [SerializeField] private int scorePerfect = 3;
-    [SerializeField] private int scoreGreat = 2;
-    [SerializeField] private int scorePass = 1;
+     public int scorePerfect = 3;
+     public int scoreGreat = 2;
+     public int scorePass = 1;
 
     [Header("Formatting")]
     [SerializeField] private bool padWithZeros = false;

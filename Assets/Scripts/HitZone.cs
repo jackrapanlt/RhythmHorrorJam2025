@@ -127,42 +127,49 @@ public class HitZone : MonoBehaviour
         float nowForBest = best.useUnscaledForTiming ? Time.unscaledTime : Time.time;
         float offsetMs = Mathf.Abs(nowForBest - best.absHitTime) * 1000f;
 
-        //Score//
-
-        if (bestOffset <= perfectWindow) //perfect
+        ///////////////Score//////////////
+        void AwardCall(JudgementType j)
         {
-            if (hp != null) { hp.GainStamina(staminaGainOnHit); }
+            // Ranking
             if (Ranking.Instance != null)
-                Ranking.Instance.ApplyHitToScore(Score.Instance.GetBaseScore(JudgementType.Perfect));
-            else
-                Score.Instance?.AddScore(Score.Instance.GetBaseScore(JudgementType.Perfect));
+            {
+               
+                Ranking.Instance.ApplyHitToScore(j);
+                return;
+            }
 
-            Debug.Log($"Perfect");
+            // None Ranking
+            var sc = Score.Instance;
+            if (sc != null)
+            {
+                sc.AddScore(sc.GetBaseScore(j));
+            }
+        }
+
+
+        if (bestOffset <= perfectWindow) // perfect
+        {
+            if (hp != null) hp.GainStamina(staminaGainOnHit);
+            AwardCall(JudgementType.Perfect);
+            Debug.Log("Perfect");
             (best as IHittable)?.Die();
         }
-        else if (bestOffset <= greatWindow) //great
+        else if (bestOffset <= greatWindow) // great
         {
-            if (hp != null) { hp.GainStamina(staminaGainOnHit); }
-            if (Ranking.Instance != null)
-                Ranking.Instance.ApplyHitToScore(Score.Instance.GetBaseScore(JudgementType.Great));
-            else
-                Score.Instance?.AddScore(Score.Instance.GetBaseScore(JudgementType.Great));
-
-            Debug.Log($"Great");
+            if (hp != null) hp.GainStamina(staminaGainOnHit);
+            AwardCall(JudgementType.Great);
+            Debug.Log("Great");
             (best as IHittable)?.Die();
         }
-        else if (bestOffset <= passWindow) //pass
+        else if (bestOffset <= passWindow) // pass
         {
-            if (hp != null) { hp.GainStamina(staminaGainOnHit); }
-            if (Ranking.Instance != null)
-                Ranking.Instance.ApplyHitToScore(Score.Instance.GetBaseScore(JudgementType.Pass));
-            else
-                Score.Instance?.AddScore(Score.Instance.GetBaseScore(JudgementType.Pass));
-
-            Debug.Log($"Pass");
+            if (hp != null) hp.GainStamina(staminaGainOnHit);
+            AwardCall(JudgementType.Pass);
+            Debug.Log("Pass");
             (best as IHittable)?.Die();
         }
- 
+        
+
 
         if (best == null) return;
         for (int i = inside.Count - 1; i >= 0; i--)

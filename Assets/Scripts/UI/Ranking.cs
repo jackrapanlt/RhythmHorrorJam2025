@@ -44,6 +44,8 @@ public class Ranking : MonoBehaviour
     [SerializeField] private int peakCombo = 0;     // คอมโบสูงสุดในเกมนี้
 
     public int PeakCombo => peakCombo;
+
+
     public string PeakRankName
     {
         get
@@ -75,11 +77,12 @@ public class Ranking : MonoBehaviour
         RefreshUI();
     }
 
-    /// เรียกเมื่อ Hit สำเร็จ: คืนคะแนนหลังคูณ พร้อมอัปความคืบหน้า/แรงค์ และอัปเดตสถิติสูงสุด
-    public int OnHitAndGetScoredPoints(int baseScore)
+
+    public int OnHitAndGetScoredPoints(int baseScore, JudgementType judgement)
     {
         var entry = GetCurrentEntry();
-        float mul = (entry != null) ? Mathf.Max(0f, entry.multiplier) : 1f;
+        float rankMul = (entry != null) ? Mathf.Max(0f, entry.multiplier) : 1f;
+        float judgeMul = GetJudgementMultiplier(judgement);
 
         // โดนครั้งแรกของเชน -> เผย UI
         if (!revealedThisChain)
@@ -89,7 +92,7 @@ public class Ranking : MonoBehaviour
         comboChain++;
         if (comboChain > peakCombo) peakCombo = comboChain;
 
-        int finalScore = Mathf.RoundToInt(baseScore * mul);
+        int finalScore = Mathf.RoundToInt(baseScore * rankMul * judgeMul);
 
         // เพิ่มคอมโบตามแรงค์ปัจจุบัน + เลื่อนแรงค์ถ้าถึงเกณฑ์
         StepProgress();
@@ -100,26 +103,64 @@ public class Ranking : MonoBehaviour
         return finalScore;
     }
 
-    /// เรียกจาก MissZone: รีเซ็ตแรงค์/คอมโบ และกลับไปซ่อนจนกว่าจะโดนใหม่ (แต่คงค่าสูงสุดไว้)
-    public void ResetToFirstRank()
+ 
+    public int OnHitAndGetScoredPoints(int baseScore)
     {
-        currentIndex = 0;
-        hitsAtThisRank = 0;
+        var entry = GetCurrentEntry();
+        float rankMul = (entry != null) ? Mathf.Max(0f, entry.multiplier) : 1f;
 
-        // รีเซ็ตห่วงโซ่คอมโบ (เริ่มนับใหม่)
-        comboChain = 0;
+        if (!revealedThisChain)
+            revealedThisChain = true;
 
-        // ไม่รีเซ็ต peakCombo/peakRankIndex เพื่อเก็บสถิติสูงสุดของรอบนี้
-        revealedThisChain = false;
-        RefreshUI();
+        comboChain++;
+        if (comboChain > peakCombo) peakCombo = comboChain;
+
+        int finalScore = Mathf.RoundToInt(baseScore * rankMul);
+
+        StepProgress();
+
+        if (currentIndex > peakRankIndex) peakRankIndex = currentIndex;
+
+        return finalScore;
     }
 
-    /// สะดวกใช้: คูณคะแนนแล้วส่งเข้า Score
+
+    /////////// เพิ่ม Judgement เข้ามาดึง basescore แล้วคูณ AddScore///////////////////////
+
+    public void ApplyHitToScore(JudgementType judgement)
+    {
+        int baseScore = Score.Instance ? Score.Instance.GetBaseScore(judgement) : 0;
+        int gained = OnHitAndGetScoredPoints(baseScore);
+        Score.Instance?.AddScore(gained);
+    }
+
+
     public void ApplyHitToScore(int baseScore)
     {
         int gained = OnHitAndGetScoredPoints(baseScore);
         Score.Instance?.AddScore(gained);
     }
+
+
+
+    private float GetJudgementMultiplier(JudgementType j)
+    {
+        if (Score.Instance == null)
+            return 1f;
+
+        switch (j)
+        {
+            case JudgementType.Perfect:
+                return Mathf.Max(0f, Score.Instance.scorePerfect);
+            case JudgementType.Great:
+                return Mathf.Max(0f, Score.Instance.scoreGreat);
+            case JudgementType.Pass:
+                return Mathf.Max(0f, Score.Instance.scorePass);
+            default:
+                return 1f;
+        }
+    }
+
 
     private RankEntry GetCurrentEntry()
     {
@@ -179,7 +220,7 @@ public class Ranking : MonoBehaviour
 
     private static string FormatMultiplier(float m)
     {
-        // แสดงเป็นจำนวนเต็มถ้าลงตัว (2.0 -> "2"), ไม่งั้นปัด 2 หลัก (2.5 -> "2.5")
+  
         float rounded = Mathf.Round(m);
         if (Mathf.Abs(m - rounded) < 0.0001f) return ((int)rounded).ToString();
         return m.ToString("0.##");
@@ -191,6 +232,20 @@ public class Ranking : MonoBehaviour
         currentIndex = Mathf.Clamp(currentIndex, 0, ranks.Count - 1);
         hitsAtThisRank = Mathf.Max(0, hitsAtThisRank);
     }
+
+    public void ResetToFirstRank()
+    {
+        currentIndex = 0;
+        hitsAtThisRank = 0;
+
+        
+        comboChain = 0;
+
+       
+        revealedThisChain = false;
+        RefreshUI();
+    }
+
 
 #if UNITY_EDITOR
     private void OnValidate()

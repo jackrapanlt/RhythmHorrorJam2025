@@ -19,7 +19,7 @@ public class MissZone : MonoBehaviour
         hp?.Damage(damageOnMiss);
 
         // รีเซ็ตแรงค์กลับตัวแรกสุด
-        Ranking.Instance?.ResetToFirstRank();
+        Ranking.Instance.ResetToFirstRank();
 
         // ดีบักไว้ดูเวลาและเลน
         Debug.LogWarning($"MISS | lane {m.lane}s");
