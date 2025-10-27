@@ -16,10 +16,10 @@ public class HitZone : MonoBehaviour
     [SerializeField] private HP_Stamina hp;
     [SerializeField] private int staminaGainOnHit = 5;
 
-    [Header("Judgement Windows (seconds)")]
-    [SerializeField] private float perfectWindow = 0.05f;  // 50 ms
-    [SerializeField] private float greatWindow = 0.12f;  // 120 ms
-    [SerializeField] private float passWindow = 0.22f;  // 220 ms
+    [Header("Judgement Windows)")]
+    [SerializeField] private float perfectWindow = 0.05f;  // ms
+    [SerializeField] private float greatWindow = 0.12f;  
+    [SerializeField] private float passWindow = 0.22f;  
 
     [Header("Score per Judgement")]
     [SerializeField] private int scorePerfect = 3;
@@ -50,7 +50,7 @@ public class HitZone : MonoBehaviour
         if (InputManager.Instance != null)
             InputManager.Instance.OnHit += TryHit;
         else
-            Debug.LogWarning("[HitZone] InputManager.Instance is null on OnEnable. Will try auto-rebind in Start().");
+            Debug.LogWarning("[HitZone] InputManager.Instance is null on OnEnable.");
     }
 
     private void Start()
@@ -90,11 +90,11 @@ public class HitZone : MonoBehaviour
     {
         if (player == null) return;
 
-        // 1) หาโน้ตใน "เลนเดียวกับผู้เล่น" ทั้งฉาก แล้วเลือกตัวที่ |now - absHitTime| น้อยที่สุด
+        
         MonsterRhythm best = null;
         float bestOffset = float.MaxValue;
 
-        // ใช้ inside ก่อนถ้ามี (แม่น+เร็ว) ไม่มีก็ค่อย fallback ทั้งฉาก
+     
         List<MonsterRhythm> candidates = new List<MonsterRhythm>();
         if (inside.Count > 0)
         {
@@ -107,7 +107,7 @@ public class HitZone : MonoBehaviour
         }
         if (candidates.Count == 0)
         {
-            // fallback: มองทั้งฉาก
+            
             foreach (var m in FindObjectsByType<MonsterRhythm>(FindObjectsSortMode.None))
 
             {
@@ -116,7 +116,7 @@ public class HitZone : MonoBehaviour
         }
         if (candidates.Count == 0) return;
 
-        // เลือกตัวที่เวลาใกล้ที่สุด
+        
         foreach (var m in candidates)
         {
             float nowAbs = m.useUnscaledForTiming ? Time.unscaledTime : Time.time;
@@ -129,31 +129,32 @@ public class HitZone : MonoBehaviour
         }
         if (best == null) return;
 
-        // 2) ตัดสินเฉพาะ 3 ช่วง; ถ้าเกิน passWindow → "ไม่ทำอะไร" ปล่อยให้ไปชน MissZone
+        
         float nowForBest = best.useUnscaledForTiming ? Time.unscaledTime : Time.time;
         float offsetMs = Mathf.Abs(nowForBest - best.absHitTime) * 1000f;
+
+        //Score//
 
         if (bestOffset <= perfectWindow)
         {
             Ranking.Instance?.ApplyHitToScore(scorePerfect);
-            Debug.Log($"Perfect (+{scorePerfect}) | {offsetMs:0} ms");
+            Debug.Log($"Perfect (+{scorePerfect})");
             (best as IHittable)?.Die();
         }
         else if (bestOffset <= greatWindow)
         {
             Ranking.Instance?.ApplyHitToScore(scoreGreat);
-            Debug.Log($"Great (+{scoreGreat}) | {offsetMs:0} ms");
+            Debug.Log($"Great (+{scoreGreat})");
             (best as IHittable)?.Die();
         }
         else if (bestOffset <= passWindow)
         {
             Ranking.Instance?.ApplyHitToScore(scorePass);
-            Debug.Log($"Pass (+{scorePass}) | {offsetMs:0} ms");
+            Debug.Log($"Pass (+{scorePass})");
             (best as IHittable)?.Die();
         }
-        // else: นอกทุกกรอบ → ไม่แตะอะไร ให้ MissZone จัดการเอง
+ 
 
-        // เอาออกจาก inside ถ้าตายไปแล้ว
         if (best == null) return;
         for (int i = inside.Count - 1; i >= 0; i--)
         {
@@ -166,6 +167,5 @@ public class HitZone : MonoBehaviour
             }
         }
     }
-
 
 }

@@ -2840,7 +2840,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85004c7c654d06a4f9c6f6709140746e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chartCsv: {fileID: 4900000, guid: 6147a65419a55cd42a0ee585a193aa58, type: 3}
+  chartCsv: {fileID: 4900000, guid: 3f884e45a77ec3d4483fad270fc56767, type: 3}
   monsterPrefab: {fileID: 5206566457705220235, guid: d1a287f33a9a88d438a0b14023b9b147, type: 3}
   spawnPoint1: {fileID: 413475178}
   spawnPoint2: {fileID: 1037953357}
@@ -3443,7 +3443,7 @@ MonoBehaviour:
   staminaGainOnHit: 5
   perfectWindow: 0.03
   greatWindow: 0.08
-  passWindow: 0.2
+  passWindow: 0.3
   scorePerfect: 3
   scoreGreat: 2
   scorePass: 1
