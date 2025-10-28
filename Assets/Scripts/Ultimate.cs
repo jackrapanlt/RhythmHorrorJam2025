@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public class Ultimate : MonoBehaviour
 {
+    private Ultimate instance;
+
     [Header("Refs")]
     [SerializeField] private HP_Stamina hp;    // ใช้เช็ค/หักสแตมินา และ +สแตมินาเมื่อ “นับเป็น Hit”
     [SerializeField] private Slider stamina;  
@@ -16,6 +18,7 @@ public class Ultimate : MonoBehaviour
     [SerializeField] private float intervalSeconds = 0.5f;  // ห่างกันตัวละ 0.5 วิ (รวม ~5 วิ)
 
     [Header("Hit Simulation")]
+    [SerializeField] private bool gainStaminaOnUltimateKills = false;
     [SerializeField] private int staminaGainPerUltimateHit = 5; // +สแตมินาต่อการกำจัด 1 ตัว
 
     [Header("Ultimate Scoring")]
@@ -26,6 +29,16 @@ public class Ultimate : MonoBehaviour
 
     private void Awake()
     {
+
+        if (instance != null && instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        instance = this;
+        DontDestroyOnLoad(gameObject);
+
         if (!hp) hp = FindAnyObjectByType<HP_Stamina>(FindObjectsInactive.Include);
         if (!player) player = FindAnyObjectByType<Player>(FindObjectsInactive.Include);
     }
@@ -109,7 +122,8 @@ public class Ultimate : MonoBehaviour
                 try { target.MarkHit(); } catch { /* ignore if not available */ }
 
                 // 2) บวกสแตมินาเหมือนโดนใน HitZone
-                hp?.GainStamina(staminaGainPerUltimateHit);
+                if (gainStaminaOnUltimateKills && staminaGainPerUltimateHit > 0)
+                    hp?.GainStamina(staminaGainPerUltimateHit);
 
                 // 3) คำนวณคะแนนพื้นฐานของ Ultimate
                 int baseScore;

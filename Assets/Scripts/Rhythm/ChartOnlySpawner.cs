@@ -43,7 +43,6 @@ public class ChartOnlySpawner : MonoBehaviour
     private float startClock;
     private float pausedAt;
 
-   
     private Dictionary<string, int> nameToIndex = new(StringComparer.OrdinalIgnoreCase);
 
     private void Awake()
@@ -176,7 +175,7 @@ public class ChartOnlySpawner : MonoBehaviour
         {
             var pf = monsterPrefabs[i];
             if (!pf) continue;
-           
+
             if (!nameToIndex.ContainsKey(pf.name))
                 nameToIndex.Add(pf.name, i);
         }
@@ -199,7 +198,7 @@ public class ChartOnlySpawner : MonoBehaviour
             var line = raw.Trim();
             if (string.IsNullOrEmpty(line)) continue;
 
-          
+            // ข้ามบรรทัด header ถ้ามี
             if (!headerSkipped && (line.IndexOf("time", StringComparison.OrdinalIgnoreCase) >= 0) &&
                                    (line.IndexOf("lane", StringComparison.OrdinalIgnoreCase) >= 0))
             {
