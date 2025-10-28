@@ -20,7 +20,7 @@ public class Ranking : MonoBehaviour
 
     [Header("UI")]
     [SerializeField] private TMP_Text rankText;       // ป้ายแรงค์ (B/A/S...)
-    [SerializeField] private TMP_Text progressText;   // ป้ายคอมโบ: "Combo : {hitsAtThisRank}"
+    [SerializeField] private TMP_Text progressText;   // ป้ายคอมโบ: "Combo : {comboChain}"
     [SerializeField] private TMP_Text xNumber;        // ป้ายตัวคูณ: "x1", "x2.5" เป็นต้น
 
     [Header("State")]
@@ -44,7 +44,6 @@ public class Ranking : MonoBehaviour
     [SerializeField] private int peakCombo = 0;     // คอมโบสูงสุดในเกมนี้
 
     public int PeakCombo => peakCombo;
-
 
     public string PeakRankName
     {
@@ -77,7 +76,6 @@ public class Ranking : MonoBehaviour
         RefreshUI();
     }
 
-
     public int OnHitAndGetScoredPoints(int baseScore, JudgementType judgement)
     {
         var entry = GetCurrentEntry();
@@ -103,7 +101,6 @@ public class Ranking : MonoBehaviour
         return finalScore;
     }
 
- 
     public int OnHitAndGetScoredPoints(int baseScore)
     {
         var entry = GetCurrentEntry();
@@ -124,9 +121,7 @@ public class Ranking : MonoBehaviour
         return finalScore;
     }
 
-
     /////////// เพิ่ม Judgement เข้ามาดึง basescore แล้วคูณ AddScore///////////////////////
-
     public void ApplyHitToScore(JudgementType judgement)
     {
         int baseScore = Score.Instance ? Score.Instance.GetBaseScore(judgement) : 0;
@@ -134,14 +129,11 @@ public class Ranking : MonoBehaviour
         Score.Instance?.AddScore(gained);
     }
 
-
     public void ApplyHitToScore(int baseScore)
     {
         int gained = OnHitAndGetScoredPoints(baseScore);
         Score.Instance?.AddScore(gained);
     }
-
-
 
     private float GetJudgementMultiplier(JudgementType j)
     {
@@ -160,7 +152,6 @@ public class Ranking : MonoBehaviour
                 return 1f;
         }
     }
-
 
     private RankEntry GetCurrentEntry()
     {
@@ -200,11 +191,12 @@ public class Ranking : MonoBehaviour
         if (progressText)
         {
             bool showCombo = showRank && (!hideProgressWithRank || rankText.enabled);
-            if (hideComboWhenZero && hitsAtThisRank <= 0) showCombo = false;
+            // เปลี่ยนมาอิงคอมโบรวมต่อเนื่อง
+            if (hideComboWhenZero && comboChain <= 0) showCombo = false;
 
             progressText.enabled = showCombo;
             if (showCombo)
-                progressText.text = $"Combo : {hitsAtThisRank}";
+                progressText.text = comboLabel + comboChain; // e.g., "Combo : 12"
         }
 
         if (xNumber)
@@ -220,7 +212,6 @@ public class Ranking : MonoBehaviour
 
     private static string FormatMultiplier(float m)
     {
-  
         float rounded = Mathf.Round(m);
         if (Mathf.Abs(m - rounded) < 0.0001f) return ((int)rounded).ToString();
         return m.ToString("0.##");
@@ -238,14 +229,11 @@ public class Ranking : MonoBehaviour
         currentIndex = 0;
         hitsAtThisRank = 0;
 
-        
         comboChain = 0;
 
-       
         revealedThisChain = false;
         RefreshUI();
     }
-
 
 #if UNITY_EDITOR
     private void OnValidate()

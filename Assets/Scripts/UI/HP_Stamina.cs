@@ -16,10 +16,19 @@ public class HP_Stamina : MonoBehaviour
     [Header("Stamina")]
     [SerializeField] private Slider stamina;         // ตั้ง Min=0, Max=1 (Value 1 = 100)
     [SerializeField] private int maxStamina = 100;
-    [SerializeField] private int startStamina = 0;   // ค่าเริ่มต้น (เช่น 0)
+    [SerializeField] private int startStamina = 0;   // ค่าเริ่มต้น
     [SerializeField] private float staminaLerpSpeed = 10f;
     public int Stamina { get; private set; }
     private float shownStamina01 = 0f;
+
+    [Header("Low HP Overlay")]
+    [SerializeField] private Image lowHpOverlay;               // ลาก Image เต็มจอ/เหนือ UI
+    [Range(0f, 1f)] public float alphaAtFullHP = 0f;           // HP เต็ม = โปร่งเท่าไหร่ (ปกติ 0)
+    [Range(0f, 1f)] public float alphaAtZeroHP = 1f;           // HP 0 = ทึบเท่าไหร่ (ปกติ 1)
+    [SerializeField, Range(0.1f, 20f)] private float overlayLerpSpeed = 6f; // ความเร็วเฟด
+
+    // เผื่ออยาก bind ผ่านโค้ด
+    public void BindLowHpOverlay(Image overlay) => lowHpOverlay = overlay;
 
     private bool isGameOver;
 
@@ -30,7 +39,7 @@ public class HP_Stamina : MonoBehaviour
         shownHP01 = GetHP01();
         UpdateHPImmediate();
 
-        // Stamina ใหม่
+        // Stamina เดิม
         Stamina = Mathf.Clamp(startStamina, 0, maxStamina);
         shownStamina01 = GetStamina01();
         UpdateStaminaImmediate();
@@ -40,6 +49,7 @@ public class HP_Stamina : MonoBehaviour
     {
         UpdateHPSmoothed();
         UpdateStaminaSmoothed();
+        UpdateLowHpOverlay(); // เฟดภาพเตือนเลือดน้อย
     }
 
     // ---------- Public API: HP ----------
@@ -65,7 +75,7 @@ public class HP_Stamina : MonoBehaviour
         if (HP <= 0 && !isGameOver)
         {
             isGameOver = true;
-            GameOverController.Instance?.TriggerGameOver(); // เรียก Game Over เดิม
+            GameOverController.Instance?.TriggerGameOver();
         }
     }
 
@@ -77,7 +87,7 @@ public class HP_Stamina : MonoBehaviour
     }
 
     // ---------- Public API: Stamina ----------
-    /// <summary>เพิ่มสแตมินาเป็น “คะแนน” (1 คะแนน = 0.01 บนสไลเดอร์ที่ Max=1)</summary>
+    /// <summary>เพิ่มสแตมินาเป็น “คะแนน” (1 คะแนน = 0.01 บนสไลเดอร์ Max=1)</summary>
     public void GainStamina(int amount)
     {
         if (amount < 0) amount = 0;
@@ -157,5 +167,19 @@ public class HP_Stamina : MonoBehaviour
         float target = GetStamina01();
         shownStamina01 = Mathf.MoveTowards(shownStamina01, target, Time.unscaledDeltaTime * staminaLerpSpeed);
         stamina.value = shownStamina01;
+    }
+
+    // ---------- Low HP Overlay ----------
+    private void UpdateLowHpOverlay()
+    {
+        if (!lowHpOverlay) return;
+
+        // HP มาก = โปร่ง, HP น้อย = ทึบ
+        float normalizedHP = Mathf.Clamp01((maxHP > 0) ? (float)HP / maxHP : 0f);
+        float targetAlpha = Mathf.Lerp(alphaAtZeroHP, alphaAtFullHP, normalizedHP);
+
+        var c = lowHpOverlay.color;
+        c.a = Mathf.Lerp(c.a, targetAlpha, Time.unscaledDeltaTime * overlayLerpSpeed);
+        lowHpOverlay.color = c;
     }
 }
