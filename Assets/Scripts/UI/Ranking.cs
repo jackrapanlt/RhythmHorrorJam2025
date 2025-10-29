@@ -62,6 +62,7 @@ public class Ranking : MonoBehaviour
     {
         if (Instance && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
     private void OnEnable()

@@ -39,6 +39,7 @@ public class Score : MonoBehaviour
     {
         if (Instance && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+        DontDestroyOnLoad(gameObject);
         RefreshScoreText();   // แสดงค่าตั้งต้น
     }
 
