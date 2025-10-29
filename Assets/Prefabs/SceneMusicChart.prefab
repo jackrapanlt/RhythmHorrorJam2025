@@ -47,10 +47,16 @@ MonoBehaviour:
   entries:
   - sceneName: Main menu
     musicName: Menu
+    loop: 1
     chartCsv: {fileID: 0}
   - sceneName: Battle
     musicName: Battle
+    loop: 0
     chartCsv: {fileID: 4900000, guid: 18d92c8c0d1b9f7449fd3299835f6101, type: 3}
+  - sceneName: Boss
+    musicName: Boss
+    loop: 1
+    chartCsv: {fileID: 0}
   applyToAllSpawners: 1
   targetSpawnersOverride:
   - {fileID: 0}
