@@ -24,20 +24,27 @@ public class GameManager : MonoBehaviour
         Instance = this;
     }
 
-    /// <summary>หยุดเกม (ถ้า Pause อยู่แล้วจะไม่ทำอะไร)</summary>
-    public void PauseGame()
+    // ===== Pause / Resume =====
+
+    // ★ โอเวอร์โหลด: เรียกแบบเดิมได้ (จะพักเสียงด้วยเป็นดีฟอลต์)
+    public void PauseGame() => PauseGame(true);
+
+    /// <summary>
+    /// หยุดเกม (เลือกได้ว่าจะพักเสียงไหม)
+    /// pauseAudio=true: พักเสียงด้วย | false: ให้เสียงยังเล่นต่อ (เช่น รอ SFX จบ)
+    /// </summary>
+    public void PauseGame(bool pauseAudio)
     {
         if (IsPaused) return;
         IsPaused = true;
 
         _prevTimeScale = Time.timeScale;
-        Time.timeScale = 0f;        // หยุดการอัปเดตที่อิงเวลาของเกม
-        AudioListener.pause = true; // หยุดเสียงทั้งหมด
+        Time.timeScale = 0f;              // แช่เกม
+        AudioListener.pause = pauseAudio; // เลือกพักเสียงหรือไม่
 
         OnPaused?.Invoke();
     }
 
-    /// <summary>ให้เกมเดินต่อ (ถ้าไม่ได้ Pause อยู่จะไม่ทำอะไร)</summary>
     public void ResumeGame()
     {
         if (!IsPaused) return;
@@ -55,21 +62,33 @@ public class GameManager : MonoBehaviour
         else PauseGame();
     }
 
+    // ===== Restart / Scene change =====
+
     public void RestartGame()
     {
-        // เคลียร์สถานะ pause ให้เรียบร้อยก่อน
+        // คลาย pause ให้เรียบร้อยก่อน
         if (IsPaused) ResumeGame();
 
         // กันพลาด: ปิด pause ที่อาจค้างจากระบบอื่น
         Time.timeScale = 1f;
         AudioListener.pause = false;
 
-        // โหลดฉากปัจจุบันซ้ำเพื่อเริ่มใหม่
+        // สมัครฟังแค่ครั้งเดียว แล้วโหลดซีนปัจจุบันใหม่
+        SceneManager.sceneLoaded += OnRestartSceneLoadedOnce;
+
         var active = SceneManager.GetActiveScene();
-        SceneManager.LoadScene(active.buildIndex);
+        SceneManager.LoadScene(active.buildIndex, LoadSceneMode.Single);
     }
 
-    // ===== Scene change =====
+    // ★ เรียกครั้งเดียวหลังซีนรีโหลดเสร็จ เพื่อเล่นเพลงล่าสุดกลับมา
+    private void OnRestartSceneLoadedOnce(Scene scene, LoadSceneMode mode)
+    {
+        SceneManager.sceneLoaded -= OnRestartSceneLoadedOnce;
+
+        // เล่นเพลงล่าสุดที่ AudioManager จำไว้ (ถ้าเคยเล่นมาก่อน)
+        AudioManager.instance?.ReplayLastMusic();
+    }
+
     public void LoadSceneByName(string sceneName)
     {
         if (string.IsNullOrEmpty(sceneName)) return;

@@ -14,10 +14,9 @@ public class AudioManager : MonoBehaviour
     private const string KEY_MUSIC_MUTE = "mute_music";
     private const string KEY_SFX_MUTE = "mute_sfx";
 
-    private void Start()
-    {
-        Playmusic("Battle");
-    }
+    // --- ชื่อเพลงล่าสุดที่ถูกเล่น (ไว้สำหรับ Replay ตอนรีสตาร์ตซีน) ---
+    public string LastMusicName { get; private set; }
+
 
     private void Awake()
     {
@@ -55,7 +54,15 @@ public class AudioManager : MonoBehaviour
         {
             musicSource.clip = s.clip;
             musicSource.Play();
+            LastMusicName = name; // ★ จำชื่อเพลงล่าสุด
         }
+    }
+
+    // ★ เรียกเล่นเพลงล่าสุดซ้ำ (ใช้ตอนรีสตาร์ตซีน)
+    public void ReplayLastMusic()
+    {
+        if (!string.IsNullOrEmpty(LastMusicName))
+            Playmusic(LastMusicName);
     }
 
     public void PlaySFX(string name)

@@ -5,6 +5,8 @@ using UnityEngine.Rendering.Universal;
 
 public class HP_Stamina : MonoBehaviour
 {
+    public static HP_Stamina Instance { get; private set; }
+
     [Header("HP")]
     [SerializeField] private int maxHP = 100;
     public int HP { get; private set; }
@@ -49,6 +51,12 @@ public class HP_Stamina : MonoBehaviour
     private bool _postFxReady;
 
     private bool isGameOver;
+
+    private void Awake()
+    {
+        if (Instance && Instance != this) { Destroy(gameObject); return; }
+        Instance = this;
+    }
 
     private void Start()
     {
@@ -95,7 +103,7 @@ public class HP_Stamina : MonoBehaviour
         UpdateHPImmediate();
 
         // อัปเดต Post FX แบบทันทีเมื่อ HP เปลี่ยน (เฟรมถัดไปจะเลื่อนนุ่มเพิ่มเติม)
-        if (_postFxReady) ApplyPostFxImmediate();
+        //if (_postFxReady) ApplyPostFxImmediate();
 
         if (HP <= 0 && !isGameOver)
         {
@@ -109,7 +117,9 @@ public class HP_Stamina : MonoBehaviour
         hpSlider = s;
         sliderIs01 = sliderRange01;
         UpdateHPImmediate();
-        ApplyPostFxImmediate();
+
+        // ไม่ต้องเซ็ตเอฟเฟกต์แบบทันที
+        //ApplyPostFxImmediate();
     }
 
     // ---------- Public API: Stamina ----------

@@ -1,29 +1,61 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 
 public class MissZone : MonoBehaviour
 {
     [SerializeField] private HP_Stamina hp;
     [SerializeField] private int damageOnMiss = 5;
 
-    private void Awake() {if (!hp) hp = Object.FindAnyObjectByType<HP_Stamina>(FindObjectsInactive.Include);}
+    // กันเล่นซ้ำจากคอลลายเดอร์หลายชิ้น/เด้งฟิสิกส์
+    private readonly HashSet<int> _missedOnce = new();
+
+    private void Awake()
+    {
+        if (!hp) hp = Object.FindAnyObjectByType<HP_Stamina>(FindObjectsInactive.Include);
+    }
+
+    private void OnDisable() => _missedOnce.Clear();
+
     private void OnTriggerEnter(Collider other)
     {
-        // ตรวจว่าเป็นมอนสเตอร์ของเราไหม
         var m = other.GetComponentInParent<MonsterRhythm>();
-        if (m == null) return;
+        if (!m) return;
+        if (m.WasHit) return; // โดนตีไปแล้วไม่ถือว่า MISS
 
-        // ถ้าโดนตีไปแล้ว (WasHit) ให้มองข้าม ไม่ถือว่า MISS
-        if (m.WasHit) return;
+        // กันซ้ำ: 1 มอน = 1 MISS
+        int id = m.GetInstanceID();
+        if (_missedOnce.Contains(id)) return;
+        _missedOnce.Add(id);
 
-        // หักพลังชีวิตตามเดิม
+        // ---- ตัดสินเสียงจากผลลัพธ์ "หลังโดนมิสครั้งนี้" ----
+        string sfxToPlay = null;
+        if (hp != null)
+        {
+            int hpBefore = hp.HP;
+            int hpAfter = Mathf.Max(0, hpBefore - damageOnMiss);
+
+            if (hpAfter == 0)
+            {
+                // มิสนี้ทำให้ตายจริง (HP กลายเป็น 0) -> เล่น Dying
+                sfxToPlay = "Dying";
+            }
+            else
+            {
+                // ยังไม่ตาย -> สุ่ม Hurt01 / Hurt02
+                sfxToPlay = (Random.value < 0.5f) ? "Hurt01" : "Hurt02";
+            }
+        }
+        else
+        {
+            // ไม่มีอ้างอิง HP -> สุ่ม Hurt ตามปกติ
+            sfxToPlay = (Random.value < 0.5f) ? "Hurt01" : "Hurt02";
+        }
+
+        if (!string.IsNullOrEmpty(sfxToPlay))
+            AudioManager.instance?.PlaySFX(sfxToPlay);
+
+        // ---- ทำดาเมจ & รีเซ็ตแรงค์ตามเดิม ----
         hp?.Damage(damageOnMiss);
-
-        // รีเซ็ตแรงค์กลับตัวแรกสุด
-        Ranking.Instance.ResetToFirstRank();
-
-        // ดีบักไว้ดูเวลาและเลน
-        Debug.LogWarning($"MISS | lane {m.lane}s");
-
-
+        Ranking.Instance?.ResetToFirstRank();
     }
 }
