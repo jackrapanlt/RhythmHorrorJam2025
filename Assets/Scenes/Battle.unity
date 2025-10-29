@@ -4047,6 +4047,18 @@ PrefabInstance:
       value: SceneMusicChart
       objectReference: {fileID: 0}
     - target: {fileID: 2936518611439233664, guid: 3135b503181adcc48ad1d65e4ed41f7b, type: 3}
+      propertyPath: entries.Array.data[1].spawner
+      value: 
+      objectReference: {fileID: 1057696583}
+    - target: {fileID: 2936518611439233664, guid: 3135b503181adcc48ad1d65e4ed41f7b, type: 3}
+      propertyPath: entries.Array.data[1].chartCsv
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 2936518611439233664, guid: 3135b503181adcc48ad1d65e4ed41f7b, type: 3}
+      propertyPath: entries.Array.data[1].nextSceneName
+      value: Boss
+      objectReference: {fileID: 0}
+    - target: {fileID: 2936518611439233664, guid: 3135b503181adcc48ad1d65e4ed41f7b, type: 3}
       propertyPath: 'targetSpawnersOverride.Array.data[0]'
       value: 
       objectReference: {fileID: 1057696583}

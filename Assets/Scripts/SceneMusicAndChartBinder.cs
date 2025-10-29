@@ -1,113 +1,92 @@
-﻿using System;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class SceneMusicAndChartBinder : MonoBehaviour
 {
-    [Serializable]
+    [System.Serializable]
     public class Entry
     {
-        [Header("Scene -> Music -> Chart")]
-        public string sceneName;      // ชื่อซีน เช่น "Main menu", "Battle", "Boss"
-        public string musicName;      // ชื่อเพลงใน AudioManager.musicSounds
-        public bool loop = true;      // ★ ให้เพลงนี้วนลูปไหม
-        public TextAsset chartCsv;    // ไฟล์ชาร์ตสำหรับ ChartOnlySpawner
+        [Header("Scene Match")]
+        public string sceneName;               // ชื่อซีนที่จะใช้รายการนี้
+
+        [Header("Music")]
+        public string musicName;               // ชื่อเพลงใน AudioManager
+        public bool loop = true;               // ให้เพลงวนหรือไม่
+
+        [Tooltip("ถ้า loop = false และกำหนดชื่อนี้ไว้ จะโหลดซีนนี้หลังเพลงจบ + หน่วง")]
+        public string nextSceneName = "";      // ซีนที่จะไปต่อเมื่อเพลงจบ
+        [Tooltip("เวลาหน่วงหลังเพลงจบ (วินาที)")]
+        public float delayAfterEnd = 5f;       // ค่าเริ่มต้น 5 วิ
+
+        [Header("Chart for this scene")]
+        public TextAsset chartCsv;             // Chart ที่จะใช้กับฉากนี้
+        public ChartOnlySpawner spawner;       // ถ้าเว้นว่าง จะหาในฉากให้
     }
 
-    [Header("Profiles (Scene -> Music -> Chart)")]
-    public List<Entry> entries = new List<Entry>();
+    [SerializeField] private List<Entry> entries = new();
 
-    [Header("Apply Targets")]
-    public bool applyToAllSpawners = true;             // true = ใส่ให้ทุก ChartOnlySpawner ในซีน
-    public ChartOnlySpawner[] targetSpawnersOverride;  // ถ้าปิด applyToAllSpawners ให้กำหนดเป้าหมายที่นี่
+    private Coroutine pendingLoad;             // ไว้ยกเลิกถ้ามีการสลับรายการระหว่างรัน
 
-    [Header("Chart Options")]
-    public bool resetChartAfterAssign = true;          // เซ็ต CSV แล้ว ResetChart()
-    public bool startChartAfterAssign = true;          // และ StartChart() ทันที
-
-    [Header("When to Apply")]
-    public bool applyOnStart = true;                   // เริ่มเกม/อยู่ซีนนี้อยู่แล้ว -> ใช้ทันที
-    public bool applyOnSceneLoaded = true;             // โหลดซีนใหม่ -> ใช้โดยอัตโนมัติ
-
-    private void Awake()
+    private void Start()
     {
-        // ค้างไว้ทั้งเกมเพื่อฟัง event เปลี่ยนซีน
-        DontDestroyOnLoad(gameObject);
-    }
-
-    private void OnEnable()
-    {
-        if (applyOnSceneLoaded)
-            SceneManager.sceneLoaded += OnSceneLoaded;
+        ApplyForActiveScene();
     }
 
     private void OnDisable()
     {
-        if (applyOnSceneLoaded)
-            SceneManager.sceneLoaded -= OnSceneLoaded;
+        if (pendingLoad != null) { StopCoroutine(pendingLoad); pendingLoad = null; }
     }
 
-    private void Start()
+    /// <summary>เรียกใช้กฎสำหรับซีนปัจจุบัน</summary>
+    public void ApplyForActiveScene()
     {
-        if (applyOnStart)
-            ApplyForScene(SceneManager.GetActiveScene().name);
-    }
+        string active = SceneManager.GetActiveScene().name;
+        var e = entries.Find(x => x.sceneName == active);
+        if (e == null) return;
 
-    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-    {
-        ApplyForScene(scene.name);
-    }
-
-    private void ApplyForScene(string sceneName)
-    {
-        if (string.IsNullOrEmpty(sceneName) || entries == null || entries.Count == 0)
-            return;
-
-        // หาโปรไฟล์ของซีนนี้
-        var entry = entries.Find(e => !string.IsNullOrEmpty(e.sceneName) && e.sceneName == sceneName);
-        if (entry == null) return;
-
-        // ---------- 1) เล่นเพลงตามโปรไฟล์ + ตั้งค่า Loop ----------
-        if (AudioManager.instance != null)
+        // 1) ตั้งค่า ChartOnlySpawner (ถ้าไม่ล็อกไว้ในอินสแตนซ์)
+        var sp = e.spawner ? e.spawner : FindFirstObjectByType<ChartOnlySpawner>(FindObjectsInactive.Include);
+        if (sp != null)
         {
-            var am = AudioManager.instance;
-
-            // ตั้งค่า Loop ตามโปรไฟล์ไว้ก่อน
-            if (am.musicSource)
-                am.musicSource.loop = entry.loop; // ★ กำหนด loop/no-loop
-
-            // หยุดเพลงเก่าป้องกันซ้อน
-            if (am.musicSource && am.musicSource.isPlaying)
-                am.musicSource.Stop();
-
-            // เล่นเพลงใหม่ถ้าระบุชื่อมา
-            if (!string.IsNullOrEmpty(entry.musicName))
-                am.Playmusic(entry.musicName);
+            // หมายเหตุ: ถ้า chartCsv ใน Spawner เป็น public field ก็พอ
+            // ถ้าโปรเจกต์คุณมีเมธอดตั้งค่าเฉพาะ ให้เรียกตรงนี้แทน
+            sp.chartCsv = e.chartCsv;
         }
 
-        // ---------- 2) ตั้งค่า ChartOnlySpawner ----------
-        if (entry.chartCsv != null)
+        // 2) เล่นเพลงตามรายการ
+        var am = AudioManager.instance;
+        if (am != null && !string.IsNullOrEmpty(e.musicName))
         {
-            foreach (var sp in ResolveTargets())
+            am.Playmusic(e.musicName);
+            if (am.musicSource) am.musicSource.loop = e.loop;
+
+            // 3) ถ้าไม่ loop และตั้ง nextSceneName ไว้ → รอเพลงจบ + หน่วง แล้วค่อยโหลดซีน
+            if (pendingLoad != null) { StopCoroutine(pendingLoad); pendingLoad = null; }
+            if (!e.loop && !string.IsNullOrEmpty(e.nextSceneName))
             {
-                if (!sp) continue;
-                sp.chartCsv = entry.chartCsv;
-                if (resetChartAfterAssign) sp.ResetChart();
-                if (startChartAfterAssign) sp.StartChart();
+                pendingLoad = StartCoroutine(WaitMusicEndThenLoad(am, e.musicName, e.nextSceneName, Mathf.Max(0f, e.delayAfterEnd)));
             }
         }
     }
 
-    private IEnumerable<ChartOnlySpawner> ResolveTargets()
+    /// <summary>
+    /// รอจนเพลงที่สั่งเล่นหยุด (หรือถูกเปลี่ยนเพลง) แล้วรอเพิ่มอีก delay วินาที จากนั้นโหลดซีน
+    /// ใช้ WaitForSecondsRealtime เพื่อไม่โดน Time.timeScale
+    /// </summary>
+    private IEnumerator WaitMusicEndThenLoad(AudioManager am, string expectMusicName, string sceneToLoad, float delay)
     {
-        if (!applyToAllSpawners && targetSpawnersOverride != null && targetSpawnersOverride.Length > 0)
-            return targetSpawnersOverride;
+        var src = am ? am.musicSource : null;
+        if (src == null) yield break;
 
-#if UNITY_2022_1_OR_NEWER || UNITY_6000_0_OR_NEWER
-        return FindObjectsByType<ChartOnlySpawner>(FindObjectsSortMode.None);
-#else
-        return GameObject.FindObjectsOfType<ChartOnlySpawner>();
-#endif
+        // รอจนกว่าเพลงที่คาดหวังจะหยุดเล่น (หรือถูกเปลี่ยนเป็นเพลงอื่น)
+        while (src.isPlaying && am.LastMusicName == expectMusicName)
+            yield return null;
+
+        if (delay > 0f)
+            yield return new WaitForSecondsRealtime(delay);
+
+        SceneManager.LoadScene(sceneToLoad);
     }
 }
