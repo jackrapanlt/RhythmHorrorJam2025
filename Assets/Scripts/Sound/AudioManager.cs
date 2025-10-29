@@ -95,6 +95,7 @@ public class AudioManager : MonoBehaviour
 
     public void MusicVolume(float volume)
     {
+        volume = Mathf.Clamp01(volume);
         musicSource.volume = volume;
         PlayerPrefs.SetFloat(KEY_MUSIC_VOL, volume);
         PlayerPrefs.Save();
@@ -102,6 +103,7 @@ public class AudioManager : MonoBehaviour
 
     public void SFXVolume(float volume)
     {
+        volume = Mathf.Clamp01(volume);
         sfxSource.volume = volume;
         PlayerPrefs.SetFloat(KEY_SFX_VOL, volume);
         PlayerPrefs.Save();

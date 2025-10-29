@@ -54,7 +54,7 @@ public class HitZone : MonoBehaviour
     {
         if (!player) return;
 
-        // ★ เล่นเสียงตี "ทันที" ที่ได้รับอีเวนต์กดตี (ก่อนคำนวณ/หามอน)
+        // เล่นเสียงตี "ทันที" ที่ได้รับอีเวนต์กดตี
         AudioManager.instance?.PlaySFX("Attack");
 
         // หาเป้าหมายในเลนปัจจุบันที่ใกล้เวลา hit ที่สุด
@@ -89,7 +89,14 @@ public class HitZone : MonoBehaviour
         void Award(JudgementType j)
         {
             if (hp) hp.GainStamina(staminaGainOnHit);
+
+            // ★ เพิ่ม: แจ้ง "Base Score" ให้บอสรู้ เพื่อทำดาเมจจากฐานเท่านั้น
+            int basePts = (Score.Instance != null) ? Score.Instance.GetBaseScore(j) : 0;
+            Score.RaiseBasePoints(basePts);
+
+            // คะแนนรวมของผู้เล่นยังคงเดิม (Ranking จัดการคูณ/สูตรตามระบบคุณ)
             Ranking.Instance?.ApplyHitToScore(j);
+
             (best as IHittable)?.Die();
         }
 
