@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System; // ★ เพิ่มสำหรับ System.Action
 
 public interface IHittable { void Die(); }
 
@@ -7,6 +8,9 @@ public interface IHittable { void Die(); }
 [RequireComponent(typeof(Rigidbody))]
 public class HitZone : MonoBehaviour
 {
+    // ★ เพิ่ม: อีเวนต์แจ้งผลตัดสินให้ระบบอื่น (เช่น TimePostFX) รับฟังได้
+    public static event Action<JudgementType> OnJudgement;
+
     [Header("Refs")]
     public Player player;
     [SerializeField] private HP_Stamina hp;
@@ -90,12 +94,15 @@ public class HitZone : MonoBehaviour
         {
             if (hp) hp.GainStamina(staminaGainOnHit);
 
-            // ★ เพิ่ม: แจ้ง "Base Score" ให้บอสรู้ เพื่อทำดาเมจจากฐานเท่านั้น
+            // แจ้ง "Base Score" ให้บอสรู้ เพื่อทำดาเมจจากฐานเท่านั้น
             int basePts = (Score.Instance != null) ? Score.Instance.GetBaseScore(j) : 0;
             Score.RaiseBasePoints(basePts);
 
-            // คะแนนรวมของผู้เล่นยังคงเดิม (Ranking จัดการคูณ/สูตรตามระบบคุณ)
+            // คะแนนรวมของผู้เล่น
             Ranking.Instance?.ApplyHitToScore(j);
+
+            // ★ เพิ่ม: แจ้งผลตัดสินออกไปให้ระบบอื่นทราบ (TimePostFX จะฟังอีเวนต์นี้)
+            OnJudgement?.Invoke(j);
 
             (best as IHittable)?.Die();
         }

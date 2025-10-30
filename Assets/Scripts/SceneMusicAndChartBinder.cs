@@ -15,10 +15,8 @@ public class SceneMusicAndChartBinder : MonoBehaviour
         public string musicName;               // ชื่อเพลงใน AudioManager
         public bool loop = true;               // ให้เพลงวนหรือไม่
 
-        [Tooltip("ถ้า loop = false และกำหนดชื่อนี้ไว้ จะโหลดซีนนี้หลังเพลงจบ + หน่วง")]
+        [Tooltip("ถ้า loop = false และกำหนดชื่อนี้ไว้ จะโหลดซีนนี้หลังเพลงจบ (ดีเลย์คงที่ 5 วิดูแลโดย MusicEndWatcher)")]
         public string nextSceneName = "";      // ซีนที่จะไปต่อเมื่อเพลงจบ
-        [Tooltip("เวลาหน่วงหลังเพลงจบ (วินาที)")]
-        public float delayAfterEnd = 5f;       // ค่าเริ่มต้น 5 วิ
 
         [Header("Chart for this scene")]
         public TextAsset chartCsv;             // Chart ที่จะใช้กับฉากนี้
@@ -27,7 +25,23 @@ public class SceneMusicAndChartBinder : MonoBehaviour
 
     [SerializeField] private List<Entry> entries = new();
 
-    private Coroutine pendingLoad;             // ไว้ยกเลิกถ้ามีการสลับรายการระหว่างรัน
+    private MusicEndWatcher watcher;
+
+    // สถานะเพลง/ซีนที่กำลังเฝ้า
+    private string watchingMusicName;
+    private string watchingNextSceneName;
+
+    private void Awake()
+    {
+        watcher = GetComponent<MusicEndWatcher>();
+        if (!watcher) watcher = gameObject.AddComponent<MusicEndWatcher>();
+        watcher.OnNaturalEnd += HandleMusicNaturalEnd;
+    }
+
+    private void OnDestroy()
+    {
+        if (watcher) watcher.OnNaturalEnd -= HandleMusicNaturalEnd;
+    }
 
     private void Start()
     {
@@ -36,7 +50,9 @@ public class SceneMusicAndChartBinder : MonoBehaviour
 
     private void OnDisable()
     {
-        if (pendingLoad != null) { StopCoroutine(pendingLoad); pendingLoad = null; }
+        if (watcher) watcher.StopWatching();
+        watchingMusicName = null;
+        watchingNextSceneName = null;
     }
 
     /// <summary>เรียกใช้กฎสำหรับซีนปัจจุบัน</summary>
@@ -46,47 +62,46 @@ public class SceneMusicAndChartBinder : MonoBehaviour
         var e = entries.Find(x => x.sceneName == active);
         if (e == null) return;
 
-        // 1) ตั้งค่า ChartOnlySpawner (ถ้าไม่ล็อกไว้ในอินสแตนซ์)
+        // 1) ตั้งค่า ChartOnlySpawner
         var sp = e.spawner ? e.spawner : FindFirstObjectByType<ChartOnlySpawner>(FindObjectsInactive.Include);
-        if (sp != null)
-        {
-            // หมายเหตุ: ถ้า chartCsv ใน Spawner เป็น public field ก็พอ
-            // ถ้าโปรเจกต์คุณมีเมธอดตั้งค่าเฉพาะ ให้เรียกตรงนี้แทน
-            sp.chartCsv = e.chartCsv;
-        }
+        if (sp != null) sp.chartCsv = e.chartCsv;
 
-        // 2) เล่นเพลงตามรายการ
+        // 2) เล่นเพลง
         var am = AudioManager.instance;
         if (am != null && !string.IsNullOrEmpty(e.musicName))
         {
             am.Playmusic(e.musicName);
             if (am.musicSource) am.musicSource.loop = e.loop;
 
-            // 3) ถ้าไม่ loop และตั้ง nextSceneName ไว้ → รอเพลงจบ + หน่วง แล้วค่อยโหลดซีน
-            if (pendingLoad != null) { StopCoroutine(pendingLoad); pendingLoad = null; }
-            if (!e.loop && !string.IsNullOrEmpty(e.nextSceneName))
+            // 3) ถ้าไม่ loop และมี nextSceneName → ให้ MusicEndWatcher เฝ้าเพลงนี้
+            if (!e.loop && !string.IsNullOrEmpty(e.nextSceneName) && am.musicSource)
             {
-                pendingLoad = StartCoroutine(WaitMusicEndThenLoad(am, e.musicName, e.nextSceneName, Mathf.Max(0f, e.delayAfterEnd)));
+                watchingMusicName = e.musicName;
+                watchingNextSceneName = e.nextSceneName;
+                watcher.Watch(am.musicSource, watchingMusicName);
+            }
+            else
+            {
+                if (watcher) watcher.StopWatching();
+                watchingMusicName = null;
+                watchingNextSceneName = null;
             }
         }
     }
 
-    /// <summary>
-    /// รอจนเพลงที่สั่งเล่นหยุด (หรือถูกเปลี่ยนเพลง) แล้วรอเพิ่มอีก delay วินาที จากนั้นโหลดซีน
-    /// ใช้ WaitForSecondsRealtime เพื่อไม่โดน Time.timeScale
-    /// </summary>
-    private IEnumerator WaitMusicEndThenLoad(AudioManager am, string expectMusicName, string sceneToLoad, float delay)
+    // ========== Event Handler ==========
+    private void HandleMusicNaturalEnd(string endedName)
     {
-        var src = am ? am.musicSource : null;
-        if (src == null) yield break;
+        // รับเฉพาะเพลงที่เฝ้าอยู่
+        if (string.IsNullOrEmpty(watchingNextSceneName)) return;
+        if (endedName != watchingMusicName) return;
 
-        // รอจนกว่าเพลงที่คาดหวังจะหยุดเล่น (หรือถูกเปลี่ยนเป็นเพลงอื่น)
-        while (src.isPlaying && am.LastMusicName == expectMusicName)
-            yield return null;
+        // กันเคสตายระหว่างรอ 5 วิ (MusicEndWatcher ดีเลย์ให้แล้ว แต่เราเช็กซ้ำตรงนี้อีกชั้น)
+        var hp = (HP_Stamina.Instance != null)
+            ? HP_Stamina.Instance
+            : FindAnyObjectByType<HP_Stamina>(FindObjectsInactive.Include);
+        if (hp != null && hp.HP <= 0) return;
 
-        if (delay > 0f)
-            yield return new WaitForSecondsRealtime(delay);
-
-        SceneManager.LoadScene(sceneToLoad);
+        SceneManager.LoadScene(watchingNextSceneName);
     }
 }

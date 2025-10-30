@@ -1957,6 +1957,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1368158772}
   - component: {fileID: 1368158773}
+  - component: {fileID: 1368158774}
   m_Layer: 0
   m_Name: CameraEffect Boss
   m_TagString: Untagged
@@ -1996,6 +1997,23 @@ MonoBehaviour:
   blendDistance: 0
   weight: 1
   sharedProfile: {fileID: 11400000, guid: af69201737f4b3347817569958a78a7e, type: 2}
+--- !u!114 &1368158774
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1368158771}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1d5c4b241c453748a935e54389aa45c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TimePostFX
+  postVolume: {fileID: 1368158773}
+  startDelay: 1
+  stepIntervalSeconds: 1
+  stepAmount: 0.01
+  fadeLerpSpeed: 0.1
 --- !u!1 &1481419434
 GameObject:
   m_ObjectHideFlags: 0

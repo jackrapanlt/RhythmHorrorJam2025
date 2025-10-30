@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7578736606270416370}
   - component: {fileID: 2936518611439233664}
+  - component: {fileID: 101433637995041527}
   m_Layer: 0
   m_Name: SceneMusicChart
   m_TagString: Untagged
@@ -48,19 +49,34 @@ MonoBehaviour:
   - sceneName: Main menu
     musicName: Menu
     loop: 1
+    nextSceneName: 
+    delayAfterEnd: 5
     chartCsv: {fileID: 0}
+    spawner: {fileID: 0}
   - sceneName: Battle
-    musicName: Battle
+    musicName: Boss2
     loop: 0
+    nextSceneName: Boss
+    delayAfterEnd: 3
     chartCsv: {fileID: 4900000, guid: 18d92c8c0d1b9f7449fd3299835f6101, type: 3}
+    spawner: {fileID: 0}
   - sceneName: Boss
     musicName: Boss
     loop: 1
+    nextSceneName: 
+    delayAfterEnd: 3
     chartCsv: {fileID: 0}
-  applyToAllSpawners: 1
-  targetSpawnersOverride:
-  - {fileID: 0}
-  resetChartAfterAssign: 1
-  startChartAfterAssign: 1
-  applyOnStart: 1
-  applyOnSceneLoaded: 1
+    spawner: {fileID: 0}
+--- !u!114 &101433637995041527
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 691289075789267986}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 694718634f20ac145b1c9d0173725ec2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MusicEndWatcher
+  epsilon: 0.02

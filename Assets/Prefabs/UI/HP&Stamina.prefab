@@ -140,7 +140,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7318a70e64b36be40aa30a9a89049867, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HP_Stamina
-  maxHP: 10000
+  maxHP: 100
   hpSlider: {fileID: 3256245660522066751}
   sliderIs01: 1
   lerpSpeed: 0.1
@@ -148,14 +148,6 @@ MonoBehaviour:
   maxStamina: 100
   startStamina: 100
   staminaLerpSpeed: 10
-  postVolume: {fileID: 0}
-  hpStartFraction: 0.2
-  vignetteAtFullHP: 0.035
-  vignetteAt20HP: 0.39
-  filmGrainAtFullHP: 0
-  filmGrainAt20HP: 0.5
-  filmGrainStartFraction: 0.5
-  postFxLerpSpeed: 0.1
 --- !u!1 &1296789472560112410
 GameObject:
   m_ObjectHideFlags: 0

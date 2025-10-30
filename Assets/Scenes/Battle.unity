@@ -1456,7 +1456,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85004c7c654d06a4f9c6f6709140746e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chartCsv: {fileID: 4900000, guid: 18d92c8c0d1b9f7449fd3299835f6101, type: 3}
+  chartCsv: {fileID: 4900000, guid: 3f884e45a77ec3d4483fad270fc56767, type: 3}
   monsterPrefabs:
   - {fileID: 5206566457705220235, guid: d1a287f33a9a88d438a0b14023b9b147, type: 3}
   - {fileID: 5206566457705220235, guid: 0ef72402ca8f5bc40aee3f5a14862701, type: 3}
@@ -2299,6 +2299,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1790867064}
   - component: {fileID: 1790867065}
+  - component: {fileID: 1790867066}
   m_Layer: 0
   m_Name: CameraEffect
   m_TagString: Untagged
@@ -2338,6 +2339,26 @@ MonoBehaviour:
   blendDistance: 0
   weight: 1
   sharedProfile: {fileID: 11400000, guid: fa1d5d1c5a689794e9d7977b36fb8b97, type: 2}
+--- !u!114 &1790867066
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1790867063}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1d5c4b241c453748a935e54389aa45c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LowHPPostFX
+  postVolume: {fileID: 1790867065}
+  startDelay: 1
+  stepIntervalSeconds: 1
+  stepAmount: 0.01
+  fadeLerpSpeed: 0.1
+  deltaPerfect: -0.05
+  deltaGreat: -0.02
+  deltaPass: -0.01
 --- !u!1 &1841130312
 GameObject:
   m_ObjectHideFlags: 0
@@ -2697,6 +2718,18 @@ PrefabInstance:
       propertyPath: m_Name
       value: AudioManager
       objectReference: {fileID: 0}
+    - target: {fileID: 7104466283671637246, guid: c5dfc8a0474567a409511653c961230f, type: 3}
+      propertyPath: musicSounds.Array.size
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7104466283671637246, guid: c5dfc8a0474567a409511653c961230f, type: 3}
+      propertyPath: musicSounds.Array.data[3].clip
+      value: 
+      objectReference: {fileID: 8300000, guid: c85bcf6140e8f6641b5d541b67a9cc3f, type: 3}
+    - target: {fileID: 7104466283671637246, guid: c5dfc8a0474567a409511653c961230f, type: 3}
+      propertyPath: musicSounds.Array.data[3].name
+      value: Boss2
+      objectReference: {fileID: 0}
     - target: {fileID: 9062534556896634859, guid: c5dfc8a0474567a409511653c961230f, type: 3}
       propertyPath: m_LocalPosition.x
       value: 746.08954
@@ -2750,6 +2783,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 402008734}
     m_Modifications:
+    - target: {fileID: 101433637995041527, guid: 3135b503181adcc48ad1d65e4ed41f7b, type: 3}
+      propertyPath: epsilon
+      value: 0.02
+      objectReference: {fileID: 0}
     - target: {fileID: 691289075789267986, guid: 3135b503181adcc48ad1d65e4ed41f7b, type: 3}
       propertyPath: m_Name
       value: SceneMusicChart
@@ -2761,15 +2798,15 @@ PrefabInstance:
     - target: {fileID: 2936518611439233664, guid: 3135b503181adcc48ad1d65e4ed41f7b, type: 3}
       propertyPath: entries.Array.data[1].chartCsv
       value: 
+      objectReference: {fileID: 4900000, guid: 3f884e45a77ec3d4483fad270fc56767, type: 3}
+    - target: {fileID: 2936518611439233664, guid: 3135b503181adcc48ad1d65e4ed41f7b, type: 3}
+      propertyPath: entries.Array.data[1].musicName
+      value: Battle
       objectReference: {fileID: 0}
     - target: {fileID: 2936518611439233664, guid: 3135b503181adcc48ad1d65e4ed41f7b, type: 3}
-      propertyPath: entries.Array.data[1].nextSceneName
-      value: Boss
+      propertyPath: entries.Array.data[1].delayAfterEnd
+      value: 5
       objectReference: {fileID: 0}
-    - target: {fileID: 2936518611439233664, guid: 3135b503181adcc48ad1d65e4ed41f7b, type: 3}
-      propertyPath: 'targetSpawnersOverride.Array.data[0]'
-      value: 
-      objectReference: {fileID: 1057696583}
     - target: {fileID: 7578736606270416370, guid: 3135b503181adcc48ad1d65e4ed41f7b, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -3289,9 +3326,9 @@ PrefabInstance:
       value: HP&Stamina
       objectReference: {fileID: 0}
     - target: {fileID: 7994123095746657612, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
-      propertyPath: postVolume
-      value: 
-      objectReference: {fileID: 1790867065}
+      propertyPath: maxHP
+      value: 10000
+      objectReference: {fileID: 0}
     - target: {fileID: 8150274709058051871, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0

@@ -27,31 +27,6 @@ public class HP_Stamina : MonoBehaviour
     public int Stamina { get; private set; }
     private float shownStamina01 = 0f;
 
-    // -------------------- Post FX (URP Volume) --------------------
-    [Header("Post FX on Low HP (URP Volume)")]
-    [Tooltip("ลาก Volume ที่มี Vignette และ FilmGrain overrides")]
-    [SerializeField] private Volume postVolume;
-
-    [Tooltip("HP (0..1) ปลายช่วงการไล่ค่าของเอฟเฟกต์ — 0.20 = 20%")]
-    [Range(0f, 1f)] public float hpStartFraction = 0.20f;
-
-    [Header("Vignette Intensity (HP 100% → 20%)")]
-    [Range(0f, 1f)] public float vignetteAtFullHP = 0.035f; // HP 100%
-    [Range(0f, 1f)] public float vignetteAt20HP = 0.39f;   // HP 20%
-
-    [Header("Film Grain Intensity (HP 50% → 20%)")]
-    [Range(0f, 1f)] public float filmGrainAtFullHP = 0.0f;  // เมื่อ HP >= filmGrainStartFraction (เช่น 50%)
-    [Range(0f, 1f)] public float filmGrainAt20HP = 0.5f;   // เมื่อ HP ~ 20%
-    [Tooltip("HP (0..1) ที่ Film Grain เริ่มไล่ค่า (0.5 = เริ่มที่ 50% HP)")]
-    [Range(0f, 1f)] public float filmGrainStartFraction = 0.5f;
-
-    [Header("Smoothing")]
-    [SerializeField, Range(0.1f, 20f)] private float postFxLerpSpeed = 6f;
-
-    private Vignette _vignette;
-    private FilmGrain _filmGrain;
-    private bool _postFxReady;
-
     // -------------------- State --------------------
     private bool isGameOver;
 
@@ -73,17 +48,12 @@ public class HP_Stamina : MonoBehaviour
         Stamina = Mathf.Clamp(startStamina, 0, maxStamina);
         shownStamina01 = GetStamina01();
         UpdateStaminaImmediate();
-
-        // เตรียม Post FX และตั้งค่าตาม HP ปัจจุบัน (ค่าตั้งต้น)
-        InitPostFxHandles();
-        ApplyPostFxImmediate();
     }
 
     private void Update()
     {
         UpdateHPSmoothed();
         UpdateStaminaSmoothed();
-        UpdatePostFxSmoothed(); // เฟดเอฟเฟกต์ตาม HP
     }
 
     // -------------------- Public API: HP --------------------
@@ -96,7 +66,6 @@ public class HP_Stamina : MonoBehaviour
 
     public void Heal(int amount)
     {
-        if (isGameOver) return;
         if (amount < 0) amount = 0;
         SetHP(HP + amount);
     }
@@ -105,8 +74,6 @@ public class HP_Stamina : MonoBehaviour
     {
         HP = Mathf.Clamp(value, 0, maxHP);
         UpdateHPImmediate();
-
-        // ไม่เรียก ApplyPostFxImmediate เพื่อให้เห็นการเฟดนุ่ม ๆ ใน Update()
 
         if (HP <= 0 && !isGameOver)
         {
@@ -120,7 +87,6 @@ public class HP_Stamina : MonoBehaviour
         hpSlider = s;
         sliderIs01 = sliderRange01;
         UpdateHPImmediate();
-        // ไม่เรียก ApplyPostFxImmediate เพื่อให้เฟดนุ่ม ๆ ใน Update()
     }
 
     // -------------------- Public API: Stamina --------------------
@@ -156,7 +122,7 @@ public class HP_Stamina : MonoBehaviour
             hpSlider.minValue = 0f;
             hpSlider.maxValue = 1f;
             hpSlider.value = target01;
-            shownHP01 = target01; // กันเด้งย้อน
+            shownHP01 = target01;
         }
         else
         {
@@ -206,59 +172,4 @@ public class HP_Stamina : MonoBehaviour
         stamina.value = shownStamina01;
     }
 
-    // -------------------- Post FX Helpers --------------------
-    private void InitPostFxHandles()
-    {
-        _postFxReady = false;
-        _vignette = null;
-        _filmGrain = null;
-
-        if (!postVolume || !postVolume.profile) return;
-
-        postVolume.profile.TryGet(out _vignette);
-        postVolume.profile.TryGet(out _filmGrain);
-
-        _postFxReady = (_vignette != null) || (_filmGrain != null);
-    }
-
-    private void ApplyPostFxImmediate()
-    {
-        if (!_postFxReady) return;
-
-        float hp01 = GetHP01();
-        float end = Mathf.Max(0.0001f, hpStartFraction);
-
-        // Vignette: 100% → 20%
-        float tV = Mathf.Clamp01(Mathf.InverseLerp(1f, end, hp01));
-        if (_vignette != null && _vignette.intensity != null)
-            _vignette.intensity.value = Mathf.Lerp(vignetteAtFullHP, vignetteAt20HP, tV);
-
-        // Film Grain: 50% → 20%
-        float startG = Mathf.Clamp01(filmGrainStartFraction);
-        float tG = Mathf.Clamp01(Mathf.InverseLerp(startG, end, hp01));
-        if (_filmGrain != null && _filmGrain.intensity != null)
-            _filmGrain.intensity.value = Mathf.Lerp(filmGrainAtFullHP, filmGrainAt20HP, tG);
-    }
-
-    private void UpdatePostFxSmoothed()
-    {
-        if (!_postFxReady) return;
-
-        float hp01 = GetHP01();
-        float end = Mathf.Max(0.0001f, hpStartFraction);
-        float dt = Time.unscaledDeltaTime * postFxLerpSpeed;
-
-        // Vignette
-        float tV = Mathf.Clamp01(Mathf.InverseLerp(1f, end, hp01));
-        float vTarget = Mathf.Lerp(vignetteAtFullHP, vignetteAt20HP, tV);
-        if (_vignette != null && _vignette.intensity != null)
-            _vignette.intensity.value = Mathf.MoveTowards(_vignette.intensity.value, vTarget, dt);
-
-        // Film Grain
-        float startG = Mathf.Clamp01(filmGrainStartFraction);
-        float tG = Mathf.Clamp01(Mathf.InverseLerp(startG, end, hp01));
-        float gTarget = Mathf.Lerp(filmGrainAtFullHP, filmGrainAt20HP, tG);
-        if (_filmGrain != null && _filmGrain.intensity != null)
-            _filmGrain.intensity.value = Mathf.MoveTowards(_filmGrain.intensity.value, gTarget, dt);
-    }
 }
