@@ -2924,33 +2924,9 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 288193209}
     m_Modifications:
-    - target: {fileID: 927697262730904438, guid: 06acf595e3be0eb40b920153889abdb2, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 42
-      objectReference: {fileID: 0}
     - target: {fileID: 1193628373207972202, guid: 06acf595e3be0eb40b920153889abdb2, type: 3}
       propertyPath: m_Name
       value: Rank
-      objectReference: {fileID: 0}
-    - target: {fileID: 1856015257214146249, guid: 06acf595e3be0eb40b920153889abdb2, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 42
-      objectReference: {fileID: 0}
-    - target: {fileID: 3258766155150151660, guid: 06acf595e3be0eb40b920153889abdb2, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3258766155150151660, guid: 06acf595e3be0eb40b920153889abdb2, type: 3}
-      propertyPath: m_fontAsset
-      value: 
-      objectReference: {fileID: 11400000, guid: 83534f1a7c4ebe84b8e332e9fba2d964, type: 2}
-    - target: {fileID: 3258766155150151660, guid: 06acf595e3be0eb40b920153889abdb2, type: 3}
-      propertyPath: m_sharedMaterial
-      value: 
-      objectReference: {fileID: 6327434372608545459, guid: 83534f1a7c4ebe84b8e332e9fba2d964, type: 2}
-    - target: {fileID: 3258766155150151660, guid: 06acf595e3be0eb40b920153889abdb2, type: 3}
-      propertyPath: m_hasFontAssetChanged
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6424716965858212364, guid: 06acf595e3be0eb40b920153889abdb2, type: 3}
       propertyPath: m_Pivot.x
@@ -3030,50 +3006,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6424716965858212364, guid: 06acf595e3be0eb40b920153889abdb2, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6857313287646481594, guid: 06acf595e3be0eb40b920153889abdb2, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6857313287646481594, guid: 06acf595e3be0eb40b920153889abdb2, type: 3}
-      propertyPath: m_fontAsset
-      value: 
-      objectReference: {fileID: 11400000, guid: 83534f1a7c4ebe84b8e332e9fba2d964, type: 2}
-    - target: {fileID: 6857313287646481594, guid: 06acf595e3be0eb40b920153889abdb2, type: 3}
-      propertyPath: m_sharedMaterial
-      value: 
-      objectReference: {fileID: 6327434372608545459, guid: 83534f1a7c4ebe84b8e332e9fba2d964, type: 2}
-    - target: {fileID: 6857313287646481594, guid: 06acf595e3be0eb40b920153889abdb2, type: 3}
-      propertyPath: m_hasFontAssetChanged
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6960031476692804241, guid: 06acf595e3be0eb40b920153889abdb2, type: 3}
-      propertyPath: hideComboWhenZero
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6960031476692804241, guid: 06acf595e3be0eb40b920153889abdb2, type: 3}
-      propertyPath: hideUntilFirstHit
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6960031476692804241, guid: 06acf595e3be0eb40b920153889abdb2, type: 3}
-      propertyPath: hideProgressWithRank
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7717065365818169252, guid: 06acf595e3be0eb40b920153889abdb2, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7717065365818169252, guid: 06acf595e3be0eb40b920153889abdb2, type: 3}
-      propertyPath: m_fontAsset
-      value: 
-      objectReference: {fileID: 11400000, guid: 594ec6e3847e1a24ab1d3bc9b10d84a7, type: 2}
-    - target: {fileID: 7717065365818169252, guid: 06acf595e3be0eb40b920153889abdb2, type: 3}
-      propertyPath: m_sharedMaterial
-      value: 
-      objectReference: {fileID: -724481482890276565, guid: 594ec6e3847e1a24ab1d3bc9b10d84a7, type: 2}
-    - target: {fileID: 7717065365818169252, guid: 06acf595e3be0eb40b920153889abdb2, type: 3}
-      propertyPath: m_hasFontAssetChanged
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -3282,18 +3214,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4230753064933028921, guid: 2d7cd0434f2b9e64eb973bd508a108b6, type: 3}
-      propertyPath: m_fontAsset
-      value: 
-      objectReference: {fileID: 11400000, guid: 83534f1a7c4ebe84b8e332e9fba2d964, type: 2}
-    - target: {fileID: 4230753064933028921, guid: 2d7cd0434f2b9e64eb973bd508a108b6, type: 3}
-      propertyPath: m_sharedMaterial
-      value: 
-      objectReference: {fileID: 6327434372608545459, guid: 83534f1a7c4ebe84b8e332e9fba2d964, type: 2}
-    - target: {fileID: 4230753064933028921, guid: 2d7cd0434f2b9e64eb973bd508a108b6, type: 3}
-      propertyPath: m_hasFontAssetChanged
-      value: 0
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3367,10 +3287,6 @@ PrefabInstance:
     - target: {fileID: 989896083965175564, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
       propertyPath: m_Name
       value: HP&Stamina
-      objectReference: {fileID: 0}
-    - target: {fileID: 7994123095746657612, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
-      propertyPath: maxHP
-      value: 10000
       objectReference: {fileID: 0}
     - target: {fileID: 7994123095746657612, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
       propertyPath: postVolume
@@ -3462,6 +3378,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8644714247813517363, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8647624855813778284, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
+      propertyPath: m_AnchorMax.x
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8647624855813778284, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
