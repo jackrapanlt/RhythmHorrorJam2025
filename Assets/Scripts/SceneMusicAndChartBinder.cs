@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -9,25 +8,28 @@ public class SceneMusicAndChartBinder : MonoBehaviour
     public class Entry
     {
         [Header("Scene Match")]
-        public string sceneName;               // ชื่อซีนที่จะใช้รายการนี้
+        public string sceneName;
 
         [Header("Music")]
-        public string musicName;               // ชื่อเพลงใน AudioManager
-        public bool loop = true;               // ให้เพลงวนหรือไม่
-
-        [Tooltip("ถ้า loop = false และกำหนดชื่อนี้ไว้ จะโหลดซีนนี้หลังเพลงจบ (ดีเลย์คงที่ 5 วิดูแลโดย MusicEndWatcher)")]
-        public string nextSceneName = "";      // ซีนที่จะไปต่อเมื่อเพลงจบ
+        public string musicName;
+        public bool loop = true;
+        public string nextSceneName = "";
 
         [Header("Chart for this scene")]
-        public TextAsset chartCsv;             // Chart ที่จะใช้กับฉากนี้
-        public ChartOnlySpawner spawner;       // ถ้าเว้นว่าง จะหาในฉากให้
+        public TextAsset chartCsv;
+        public ChartOnlySpawner spawner;
+
+        [Header("Sync")]
+        [Tooltip("เริ่มเพลงและสปอนเนอร์ด้วย DSP เดียวกัน")]
+        public bool syncWithDsp = true;
+        [Range(0f, 1f)] public float startDelay = 0.15f;
+        [Tooltip("ชดเชยเวลา chart ถ้ารู้สึกช้า/เร็วเมื่อเทียบเพลง")]
+        public float chartOffset = 0f;
     }
 
     [SerializeField] private List<Entry> entries = new();
 
     private MusicEndWatcher watcher;
-
-    // สถานะเพลง/ซีนที่กำลังเฝ้า
     private string watchingMusicName;
     private string watchingNextSceneName;
 
@@ -55,48 +57,68 @@ public class SceneMusicAndChartBinder : MonoBehaviour
         watchingNextSceneName = null;
     }
 
-    /// <summary>เรียกใช้กฎสำหรับซีนปัจจุบัน</summary>
     public void ApplyForActiveScene()
     {
         string active = SceneManager.GetActiveScene().name;
         var e = entries.Find(x => x.sceneName == active);
         if (e == null) return;
 
-        // 1) ตั้งค่า ChartOnlySpawner
         var sp = e.spawner ? e.spawner : FindFirstObjectByType<ChartOnlySpawner>(FindObjectsInactive.Include);
-        if (sp != null) sp.chartCsv = e.chartCsv;
+        if (sp) sp.chartCsv = e.chartCsv;
 
-        // 2) เล่นเพลง
         var am = AudioManager.instance;
         if (am != null && !string.IsNullOrEmpty(e.musicName))
         {
+            // โหลดเพลงเข้าที่ musicSource ก่อน (สมมุติ Playmusic เซ็ต clip ให้อยู่แล้ว)
             am.Playmusic(e.musicName);
             if (am.musicSource) am.musicSource.loop = e.loop;
 
-            // 3) ถ้าไม่ loop และมี nextSceneName → ให้ MusicEndWatcher เฝ้าเพลงนี้
-            if (!e.loop && !string.IsNullOrEmpty(e.nextSceneName) && am.musicSource)
+            if (sp && am.musicSource && e.syncWithDsp)
             {
-                watchingMusicName = e.musicName;
-                watchingNextSceneName = e.nextSceneName;
-                watcher.Watch(am.musicSource, watchingMusicName);
+                // รีเซ็ตแล้วสั่งเล่นด้วย DSP
+                var src = am.musicSource;
+                src.Stop();
+                src.time = 0f;
+
+                double dspStart = AudioSettings.dspTime + e.startDelay;
+                src.PlayScheduled(dspStart);
+
+                // ให้ Spawner เริ่มด้วย DSP เดียวกัน
+                sp.StartChartAtDsp(dspStart, src, e.chartOffset);
+
+                // ตั้ง watcher ถ้าต้องไปซีนต่อ
+                SetupWatcherIfNeeded(e, src);
             }
             else
             {
-                if (watcher) watcher.StopWatching();
-                watchingMusicName = null;
-                watchingNextSceneName = null;
+                // โหมดไม่ sync: ใช้เดิม
+                if (sp) sp.StartChart();
+                SetupWatcherIfNeeded(e, am.musicSource);
             }
         }
     }
 
-    // ========== Event Handler ==========
+    private void SetupWatcherIfNeeded(Entry e, AudioSource src)
+    {
+        if (!e.loop && !string.IsNullOrEmpty(e.nextSceneName) && src != null)
+        {
+            watchingMusicName = e.musicName;
+            watchingNextSceneName = e.nextSceneName;
+            watcher.Watch(src, watchingMusicName);
+        }
+        else
+        {
+            watcher?.StopWatching();
+            watchingMusicName = null;
+            watchingNextSceneName = null;
+        }
+    }
+
     private void HandleMusicNaturalEnd(string endedName)
     {
-        // รับเฉพาะเพลงที่เฝ้าอยู่
         if (string.IsNullOrEmpty(watchingNextSceneName)) return;
         if (endedName != watchingMusicName) return;
 
-        // กันเคสตายระหว่างรอ 5 วิ (MusicEndWatcher ดีเลย์ให้แล้ว แต่เราเช็กซ้ำตรงนี้อีกชั้น)
         var hp = (HP_Stamina.Instance != null)
             ? HP_Stamina.Instance
             : FindAnyObjectByType<HP_Stamina>(FindObjectsInactive.Include);

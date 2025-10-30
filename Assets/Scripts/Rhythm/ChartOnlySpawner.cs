@@ -14,43 +14,46 @@ public class ChartOnlySpawner : MonoBehaviour
     public Transform spawnPoint2;
     public Transform hitZone;
 
-    [Header("Clock / Timing (no music)")]
+    [Header("Clock")]
     public bool autoStart = true;
-    public bool useUnscaledTime = false;
+    public bool useUnscaledTime = false;   
+
+    //Audio sync fields
+    [Tooltip("ถ้าเปิด จะอ้างอิงเวลาจาก DSP ของเพลงแทน Time.time")]
+    public bool syncToAudioSource = false;
+    [Tooltip("เพลงที่ใช้เป็น clock เมื่อ syncToAudioSource = true")]
+    public AudioSource music;
+    [Tooltip("ชดเชยเวลา chart (บวก=ช้าลง, ลบ=เร่งขึ้น)")]
+    public float chartOffsetSeconds = 0f;
 
     [Range(-0.2f, 0.2f)] public float visualOffsetSeconds = 0f;
-    [Range(0f, 5f)] public float lookaheadSeconds = 1.0f;
 
-    [Header("Flight Control")]
-    public bool useMinFlightDuration = true;
-    [Range(0.2f, 5f)] public float minFlightDuration = 2.0f;
+    [Header("Lead (auto compute)")]
+    [Range(0.2f, 5f)] public float minFlightDuration = 1.2f; 
+    [Range(0.5f, 50f)] public float laneSpeed = 10f;        
 
     [Header("Debug")]
     public bool verboseLog = false;
 
     // ======= Internal =======
-    private struct Note
-    {
-        public float hitTime;
-        public int lane;
-        public int prefabIndex;
-    }
-
+    private struct Note { public float hitTime; public int lane; public int prefabIndex; }
     private readonly List<Note> notes = new();
     private int nextIndex = 0;
 
     private bool running = false;
-    private float startClock;
+    private float startClock;         
     private float pausedAt;
 
-    private Dictionary<string, int> nameToIndex = new(StringComparer.OrdinalIgnoreCase);
+    // DSP start 
+    private double musicDspStart = -1.0;
+
+    private readonly Dictionary<string, int> nameToIndex = new(StringComparer.OrdinalIgnoreCase);
 
     private void Awake()
     {
-        if (monsterPrefabs == null || monsterPrefabs.Length == 0)
-            Debug.LogError("[ChartOnlySpawner] monsterPrefabs is empty.");
-        if (!spawnPoint1 || !spawnPoint2) Debug.LogError("[ChartOnlySpawner] spawn points missing.");
-        if (!hitZone) Debug.LogError("[ChartOnlySpawner] hitZone missing.");
+        if (monsterPrefabs == null || monsterPrefabs.Length == 0) Debug.LogError("monsterPrefabs empty");
+        if (!spawnPoint1 || !spawnPoint2) Debug.LogError("spawn points missing");
+        if (!hitZone) Debug.LogError("hitZone missing");
 
         BuildPrefabNameIndex();
         ParseChart(chartCsv);
@@ -59,7 +62,7 @@ public class ChartOnlySpawner : MonoBehaviour
     private void OnEnable()
     {
         ResetChart();
-        if (autoStart) StartChart();
+        if (autoStart && !syncToAudioSource) StartChart(); 
     }
 
     private void Update()
@@ -72,33 +75,42 @@ public class ChartOnlySpawner : MonoBehaviour
         {
             var n = notes[nextIndex];
 
-            float timeUntilHit = n.hitTime - now;
-            bool inLookahead = (now + lookaheadSeconds >= n.hitTime);
-            bool meetsMinFlight = useMinFlightDuration && (timeUntilHit <= minFlightDuration);
-            bool overdue = (timeUntilHit <= 0f);
+            //  laneSpeed minFlightDuration
+            float travel = ComputeTravelSeconds(n);
+            float spawnMoment = n.hitTime - travel;
 
-            if (inLookahead || meetsMinFlight || overdue)
+            if (now + 0.0001f >= spawnMoment)
             {
                 SpawnOne(n);
                 nextIndex++;
             }
-            else
-            {
-                break;
-            }
+            else break;
         }
     }
 
-    // ======= Controls =======
+    // ===== Public control =====
     public void StartChart()
     {
         if (running) return;
         running = true;
 
-        float baseTime = useUnscaledTime ? Time.unscaledTime : Time.time;
-        startClock = (pausedAt > 0f) ? baseTime - pausedAt : baseTime;
+        if (!syncToAudioSource)
+        {
+            float baseTime = useUnscaledTime ? Time.unscaledTime : Time.time;
+            startClock = (pausedAt > 0f) ? baseTime - pausedAt : baseTime;
+            if (verboseLog) Debug.Log("[Spawner] Start (Time.time clock)");
+        }
+    }
 
-        if (verboseLog) Debug.Log("[ChartOnlySpawner] Start");
+   
+    public void StartChartAtDsp(double dspStart, AudioSource src, float chartOffset = 0f)
+    {
+        musicDspStart = dspStart;
+        music = src;
+        chartOffsetSeconds = chartOffset;
+        syncToAudioSource = true;
+        running = true;
+        if (verboseLog) Debug.Log($"[Spawner] StartAtDsp {dspStart:F3}, offset={chartOffset:F3}");
     }
 
     public void PauseChart()
@@ -106,7 +118,6 @@ public class ChartOnlySpawner : MonoBehaviour
         if (!running) return;
         pausedAt = GetClock();
         running = false;
-        if (verboseLog) Debug.Log($"[ChartOnlySpawner] Pause at {pausedAt:F3}s");
     }
 
     public void ResetChart()
@@ -115,47 +126,56 @@ public class ChartOnlySpawner : MonoBehaviour
         pausedAt = 0f;
         nextIndex = 0;
         if (notes.Count == 0) ParseChart(chartCsv);
-        if (verboseLog) Debug.Log("[ChartOnlySpawner] Reset");
     }
 
-    // ======= Helpers =======
+    // ===== Helpers =====
     private float GetClock()
     {
-        float baseTime = useUnscaledTime ? Time.unscaledTime : Time.time;
-        return Mathf.Max(0f, baseTime - startClock);
+        if (syncToAudioSource && musicDspStart > 0.0)
+        {
+            double now = AudioSettings.dspTime;
+            return Mathf.Max(0f, (float)(now - musicDspStart) + chartOffsetSeconds);
+        }
+        else
+        {
+            float baseTime = useUnscaledTime ? Time.unscaledTime : Time.time;
+            return Mathf.Max(0f, baseTime - startClock);
+        }
+    }
+
+    private float ComputeTravelSeconds(Note n)
+    {
+        Transform sp = (n.lane == 1) ? spawnPoint1 : spawnPoint2;
+        Vector3 hitPoint = ComputeHitPointOnPlane(sp, hitZone);
+        float dist = Vector3.Distance(sp.position, hitPoint);
+        float bySpeed = (laneSpeed <= 0.0001f) ? minFlightDuration : dist / laneSpeed;
+        return Mathf.Max(minFlightDuration, bySpeed);
     }
 
     private void SpawnOne(Note n)
     {
         Transform p = (n.lane == 1) ? spawnPoint1 : spawnPoint2;
-        if (!p || monsterPrefabs == null || monsterPrefabs.Length == 0) return;
-
-        int idx = (n.prefabIndex >= 0 && n.prefabIndex < monsterPrefabs.Length) ? n.prefabIndex : 0;
-        var prefab = monsterPrefabs[idx];
-        if (!prefab)
-        {
-            Debug.LogWarning($"[ChartOnlySpawner] Prefab at index {idx} is null. Using element 0.");
-            prefab = monsterPrefabs[0];
-        }
+        int idx = Mathf.Clamp(n.prefabIndex, 0, monsterPrefabs.Length - 1);
+        var prefab = monsterPrefabs[idx] ? monsterPrefabs[idx] : monsterPrefabs[0];
 
         var m = Instantiate(prefab, p.position, p.rotation);
 
         Vector3 targetPos = ComputeHitPointOnPlane(p, hitZone);
-        float nowClock = GetClock() + visualOffsetSeconds;
+        float nowClock = GetClock();
 
         m.ConfigureFlight(
             startPos: p.position,
             targetPos: targetPos,
             scheduledHitTime: n.hitTime,
             currentClock: nowClock,
-            useUnscaledTime: useUnscaledTime
+            useUnscaledTime: false
         );
 
         m.lane = n.lane;
         m.scheduledHitTime = n.hitTime;
 
         if (verboseLog)
-            Debug.Log($"[ChartOnlySpawner] Spawn L{n.lane} P{idx} now={nowClock:F3} -> hit {n.hitTime:F3} (remain={n.hitTime - nowClock:F3}s)");
+            Debug.Log($"[Spawner] spawn L{n.lane} now={nowClock:F3} hit={n.hitTime:F3}");
     }
 
     private Vector3 ComputeHitPointOnPlane(Transform spawnPoint, Transform planeCenter)
@@ -164,7 +184,7 @@ public class ChartOnlySpawner : MonoBehaviour
         Ray ray = new Ray(spawnPoint.position, spawnPoint.forward);
         if (plane.Raycast(ray, out float enter))
             return ray.origin + ray.direction * Mathf.Max(0f, enter);
-        return planeCenter.position; // fallback
+        return planeCenter.position;
     }
 
     private void BuildPrefabNameIndex()
@@ -175,7 +195,6 @@ public class ChartOnlySpawner : MonoBehaviour
         {
             var pf = monsterPrefabs[i];
             if (!pf) continue;
-
             if (!nameToIndex.ContainsKey(pf.name))
                 nameToIndex.Add(pf.name, i);
         }
@@ -184,11 +203,7 @@ public class ChartOnlySpawner : MonoBehaviour
     private void ParseChart(TextAsset csv)
     {
         notes.Clear();
-        if (!csv)
-        {
-            Debug.LogWarning("[ChartOnlySpawner] chartCsv is null.");
-            return;
-        }
+        if (!csv) return;
 
         var lines = csv.text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
         bool headerSkipped = false;
@@ -198,74 +213,30 @@ public class ChartOnlySpawner : MonoBehaviour
             var line = raw.Trim();
             if (string.IsNullOrEmpty(line)) continue;
 
-            // ข้ามบรรทัด header ถ้ามี
             if (!headerSkipped && (line.IndexOf("time", StringComparison.OrdinalIgnoreCase) >= 0) &&
                                    (line.IndexOf("lane", StringComparison.OrdinalIgnoreCase) >= 0))
             {
-                headerSkipped = true;
-                continue;
+                headerSkipped = true; continue;
             }
 
             var parts = line.Split(',');
             if (parts.Length < 2) continue;
 
-            // time
             if (!float.TryParse(parts[0], out float t)) continue;
-
-            // lane
             if (!int.TryParse(parts[1], out int lane)) continue;
 
-            // monster (optional: index or name)
-            int prefabIdx = 0; // default
+            int prefabIdx = 0;
             if (parts.Length >= 3)
             {
                 var token = parts[2].Trim();
-
-                // ถ้าเป็นเลข -> ใช้เป็น index
-                if (int.TryParse(token, out int idx))
-                {
-                    prefabIdx = Mathf.Clamp(idx, 0, (monsterPrefabs != null && monsterPrefabs.Length > 0) ? monsterPrefabs.Length - 1 : 0);
-                }
-                else if (!string.IsNullOrEmpty(token))
-                {
-                    // ถ้าเป็นชื่อ -> map เป็น index
-                    if (nameToIndex.TryGetValue(token, out int mapIdx))
-                        prefabIdx = mapIdx;
-                    else
-                    {
-                        // หาแบบ case-insensitive อีกที (เผื่อไม่ build index)
-                        prefabIdx = FindPrefabIndexByName(token);
-                        if (prefabIdx < 0)
-                        {
-                            if (verboseLog) Debug.LogWarning($"[ChartOnlySpawner] Unknown monster '{token}' -> fallback 0");
-                            prefabIdx = 0;
-                        }
-                    }
-                }
+                if (int.TryParse(token, out int idx)) prefabIdx = Mathf.Clamp(idx, 0, (monsterPrefabs?.Length ?? 1) - 1);
+                else if (nameToIndex.TryGetValue(token, out int map)) prefabIdx = map;
             }
 
-            notes.Add(new Note
-            {
-                hitTime = Mathf.Max(0f, t),
-                lane = Mathf.Clamp(lane, 1, 2),
-                prefabIndex = prefabIdx
-            });
+            notes.Add(new Note { hitTime = Mathf.Max(0f, t), lane = Mathf.Clamp(lane, 1, 2), prefabIndex = prefabIdx });
         }
 
         notes.Sort((a, b) => a.hitTime.CompareTo(b.hitTime));
-        if (verboseLog) Debug.Log($"[ChartOnlySpawner] Loaded {notes.Count} notes.");
-    }
-
-    private int FindPrefabIndexByName(string name)
-    {
-        if (monsterPrefabs == null) return -1;
-        for (int i = 0; i < monsterPrefabs.Length; i++)
-        {
-            var pf = monsterPrefabs[i];
-            if (!pf) continue;
-            if (string.Equals(pf.name, name, StringComparison.OrdinalIgnoreCase))
-                return i;
-        }
-        return -1;
+        if (verboseLog) Debug.Log($"[Spawner] Loaded {notes.Count} notes.");
     }
 }
