@@ -3104,7 +3104,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7994123095746657612, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
       propertyPath: maxHP
+<<<<<<< Updated upstream
       value: 10
+=======
+      value: 250
+>>>>>>> Stashed changes
       objectReference: {fileID: 0}
     - target: {fileID: 8150274709058051871, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
       propertyPath: m_AnchorMax.x
