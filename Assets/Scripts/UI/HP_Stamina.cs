@@ -78,7 +78,6 @@ public class HP_Stamina : MonoBehaviour
         if (HP <= 0 && !isGameOver)
         {
             isGameOver = true;
-            GameOverController.Instance?.TriggerGameOver();
         }
     }
 
