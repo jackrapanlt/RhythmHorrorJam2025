@@ -14,13 +14,16 @@ public class GameOverController : MonoBehaviour
     [SerializeField] private GameObject hide; // ซ่อนวัตถุนี้เมื่อ Game Over
 
     [Header("Highs (per run)")]
-    [SerializeField] private TMP_Text hightRank;   // แสดงแรงค์สูงสุด เช่น "S"
-    [SerializeField] private TMP_Text hightCombo;  // แสดงคอมโบสูงสุดของเกมนี้
-    [SerializeField] private TMP_Text hightScore;  // แสดงคะแนนรวมเมื่อจบเกม (รอบนี้)
+    [SerializeField] private TMP_Text comboRankText;  // rankCombo จาก Ranking
+    [SerializeField] private TMP_Text hightCombo;     // คอมโบสูงสุดจาก Ranking
+    [SerializeField] private TMP_Text hightScore;     // คะแนนรวมสุดท้าย
+    [SerializeField] private TMP_Text scoreRankText;  // scoreRank จาก Score
 
     [Header("UI Prefix")]
+    [SerializeField] private string comboRankPrefix = "rankCombo : ";
     [SerializeField] private string comboPrefix = "High combo : ";
     [SerializeField] private string scorePrefix = "Score : ";
+    [SerializeField] private string scoreRankPrefix = "";
 
     private bool isGameOver;
 
@@ -43,48 +46,37 @@ public class GameOverController : MonoBehaviour
         isGameOver = on;
 
         if (gameOverPanel) gameOverPanel.SetActive(on);
-
-        // ซ่อน/คืนออบเจ็กต์ที่กำหนด
         if (hide) hide.SetActive(!on);
 
         if (on)
         {
-            // 1) แช่เกม แต่ "ยังไม่" พักเสียง (เพื่อให้ SFX เล่นต่อได้)
+            // แช่เกม แต่ยังไม่ pause เสียงทั้งหมด
             var gm = (GameManager.Instance != null)
                 ? GameManager.Instance
                 : FindAnyObjectByType<GameManager>(FindObjectsInactive.Include);
-            gm?.PauseGame(false); // timeScale=0, Audio ยังไม่ pause
+            gm?.PauseGame(false);
 
-            // 2) หยุดเพลงทันที (Playmusic -> Stop)
+            // หยุดเพลง + เล่น SFX Game Over
             if (AudioManager.instance && AudioManager.instance.musicSource)
                 AudioManager.instance.musicSource.Stop();
-
-            // 3) เล่น SFX "Game Over" ทันที
             AudioManager.instance?.PlaySFX("Game Over");
 
-            // 4) อัปเดตสรุป
+            // อัปเดตข้อความทั้งหมด (รวม rankCombo & scoreRank)
             UpdateHighTexts();
 
-            // 5) รอให้ SFX เล่นจนจบ -> แล้วค่อย pause เสียงทั้งเกม
+            // รอ SFX จบค่อย pause เสียงทั้งเกม
             StartCoroutine(CoWaitSfxThenPauseAudio());
         }
     }
 
     private IEnumerator CoWaitSfxThenPauseAudio()
     {
-        // รอแบบเวลาจริง (ไม่สน timeScale=0)
         float wait = 0f;
-
-        // เผื่อก่อนหน้ามี SFX "Hurt01" ดังพร้อม ๆ กัน ให้รอความยาวมากสุดของ Hurt01/ Game Over
         if (AudioManager.instance != null && AudioManager.instance.sfxSound != null)
         {
             wait = Mathf.Max(GetSfxLength("Hurt01"), GetSfxLength("Game Over"));
         }
-
-        if (wait > 0f)
-            yield return new WaitForSecondsRealtime(wait);
-
-        // เมื่อ SFX จบแล้ว ค่อยพักเสียงทั้งเกม
+        if (wait > 0f) yield return new WaitForSecondsRealtime(wait);
         AudioListener.pause = true;
     }
 
@@ -101,11 +93,11 @@ public class GameOverController : MonoBehaviour
 
     private void UpdateHighTexts()
     {
-        // Rank สูงสุด (จาก Ranking)
-        if (hightRank)
+        // rankCombo (จาก Ranking)
+        if (comboRankText)
         {
-            string rankName = Ranking.Instance ? Ranking.Instance.PeakRankName : "-";
-            hightRank.text = rankName;
+            string rankCombo = Ranking.Instance ? Ranking.Instance.PeakRankName : "-";
+            comboRankText.text = comboRankPrefix + rankCombo;
         }
 
         // คอมโบสูงสุด (จาก Ranking)
@@ -115,11 +107,19 @@ public class GameOverController : MonoBehaviour
             hightCombo.text = comboPrefix + maxCombo;
         }
 
-        // คะแนนสุดท้าย (จาก Score) พร้อม prefix
+        // คะแนนรวมสุดท้าย
         if (hightScore)
         {
             int finalScore = Score.Instance ? Score.Instance.CurrentScore : 0;
             hightScore.text = scorePrefix + finalScore;
+        }
+
+        // scoreRank (จาก Score) — ถ้า prefix ว่างจะแสดงเฉพาะเกรด เช่น "B"
+        if (scoreRankText)
+        {
+            string grade = (Score.Instance != null) ? Score.Instance.GetScoreRankName() : "-";
+            scoreRankText.text = string.IsNullOrEmpty(scoreRankPrefix)
+                ? grade : grade;
         }
     }
 }

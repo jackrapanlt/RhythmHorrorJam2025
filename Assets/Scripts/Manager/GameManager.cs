@@ -14,6 +14,8 @@ public class GameManager : MonoBehaviour
 
     private float _prevTimeScale = 1f;
 
+    private int menuBuildIndex = 0;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -73,7 +75,9 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1f;
         AudioListener.pause = false;
 
-        // สมัครฟังแค่ครั้งเดียว แล้วโหลดซีนปัจจุบันใหม่
+        Score.Instance?.ResetScore();
+        Ranking.Instance?.ResetToFirstRank();
+
         SceneManager.sceneLoaded += OnRestartSceneLoadedOnce;
 
         var active = SceneManager.GetActiveScene();
@@ -99,6 +103,7 @@ public class GameManager : MonoBehaviour
     public void LoadSceneByIndex(int buildIndex)
     {
         ResumeGame();
+        DestroyScoreAndRankingIfMenuTarget(buildIndex);
         SceneManager.LoadScene(buildIndex, LoadSceneMode.Single);
     }
 
@@ -116,6 +121,21 @@ public class GameManager : MonoBehaviour
         op.allowSceneActivation = true; // เปลี่ยนซีนทันทีเมื่อโหลดเสร็จ
         while (!op.isDone)
             yield return null;
+    }
+
+    private void DestroyScoreAndRankingIfMenuTarget(int buildIndex)
+    {
+        if (buildIndex != menuBuildIndex) return;
+
+        // ล้างค่าก่อนทำลาย (กันค้าง)
+        Score.Instance?.ResetScore();
+        Ranking.Instance?.ResetToFirstRank();
+
+        if (Score.Instance != null)
+            Destroy(Score.Instance.gameObject);
+
+        if (Ranking.Instance != null)
+            Destroy(Ranking.Instance.gameObject);
     }
 
     // ===== Quit Game =====

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
@@ -24,7 +25,7 @@ public class Score : MonoBehaviour
 
     [Header("Formatting")]
     [SerializeField] private bool padWithZeros = false;  // เติม 0 ด้านซ้ายไหม
-    [SerializeField] private int padDigits = 6;      // จำนวนหลักเมื่อเติม 0
+    [SerializeField] private int padDigits = 6;          // จำนวนหลักเมื่อเติม 0
 
     public int CurrentScore { get; private set; }
 
@@ -34,6 +35,28 @@ public class Score : MonoBehaviour
     {
         if (basePoints > 0) OnBasePointsAwarded?.Invoke(basePoints);
     }
+
+    // ===== Score → Grade (Rank by total score) =====
+    [Serializable]
+    public class ScoreRank
+    {
+        [Tooltip("ชื่อเกรด/เรท เช่น S, A, B, ...")]
+        public string scoreRank = "S";
+
+        [Tooltip("คะแนนขั้นต่ำที่จะได้เกรดนี้ (รวม)")]
+        public int minScore = 10000;
+    }
+
+    [Header("Score Ranking (by total score)")]
+    [Tooltip("กำหนดเกณฑ์คะแนน -> เกรด (เรียงลำดับอย่างไรก็ได้ โค้ดจะหาเกรดที่ minScore สูงสุดที่ไม่เกินคะแนนจริง)")]
+    [SerializeField]
+    private List<ScoreRank> scoreRanking = new List<ScoreRank>()
+    {
+        new ScoreRank{ scoreRank="S",  minScore=10000 },
+        new ScoreRank{ scoreRank="A",  minScore=7000  },
+        new ScoreRank{ scoreRank="B",  minScore=4000  },
+        new ScoreRank{ scoreRank="C",  minScore=2000  },
+    };
 
     private void Awake()
     {
@@ -69,6 +92,32 @@ public class Score : MonoBehaviour
         }
     }
 
+    // ---------- Grade Helpers ----------
+    /// <summary>ชื่อเกรดตามคะแนนรวมปัจจุบัน</summary>
+    public string GetScoreRankName()
+    {
+        var e = ResolveScoreRank(CurrentScore);
+        return e != null ? e.scoreRank : "-";
+    }
+
+    /// <summary>เลือกเกรดที่มี minScore สูงสุดที่ไม่เกิน score</summary>
+    private ScoreRank ResolveScoreRank(int score)
+    {
+        if (scoreRanking == null || scoreRanking.Count == 0) return null;
+        ScoreRank best = null;
+        for (int i = 0; i < scoreRanking.Count; i++)
+        {
+            var e = scoreRanking[i];
+            if (e == null) continue;
+            if (score >= e.minScore)
+            {
+                if (best == null || e.minScore > best.minScore)
+                    best = e;
+            }
+        }
+        return best;
+    }
+
     // ---------- UI Helpers ----------
     private void RefreshScoreText()
     {
@@ -96,4 +145,4 @@ public class Score : MonoBehaviour
 }
 
 // ถ้าในโปรเจกต์มี enum นี้อยู่แล้ว ให้ลบบรรทัดล่างทิ้ง
-public enum JudgementType { Perfect, Great, Pass ,Miss}
+public enum JudgementType { Perfect, Great, Pass , Miss}
