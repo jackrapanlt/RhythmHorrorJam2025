@@ -573,7 +573,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &209202574
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2811,6 +2811,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2076645375}
+  - component: {fileID: 2076645376}
   m_Layer: 5
   m_Name: LoadSceneBoss
   m_TagString: Untagged
@@ -2837,6 +2838,19 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2076645376
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2076645374}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b437729a397e5bd48a3a78e547857d1e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LoadSceneBoss
+  bossSceneName: Boss
 --- !u!1001 &2078968702
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2847,7 +2861,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1497661745346249600, guid: d075cd8bcdf2b154da679a1f1d961135, type: 3}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3321751392805246102, guid: d075cd8bcdf2b154da679a1f1d961135, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2899,7 +2913,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5636643236687459648, guid: d075cd8bcdf2b154da679a1f1d961135, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 713.22
+      value: -31.2
       objectReference: {fileID: 0}
     - target: {fileID: 5636643236687459648, guid: d075cd8bcdf2b154da679a1f1d961135, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2920,6 +2934,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2328357313634464704, guid: d075cd8bcdf2b154da679a1f1d961135, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2078968704}
+    - targetCorrespondingSourceObject: {fileID: 2328357313634464704, guid: d075cd8bcdf2b154da679a1f1d961135, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2078968709}
   m_SourcePrefab: {fileID: 100100000, guid: d075cd8bcdf2b154da679a1f1d961135, type: 3}
 --- !u!1 &2078968703 stripped
 GameObject:
@@ -2938,9 +2955,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50d23c901d1b5be44b2d71b65cfcae30, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriggerToBoss
-  targetToActivate: {fileID: 0}
+  targetToActivate: {fileID: 209202573}
   playerName: '#Player'
   playerTag: Player
+--- !u!54 &2078968709
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2078968703}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1001 &972915538795494637
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3021,6 +3065,10 @@ PrefabInstance:
     - target: {fileID: 2489648791401347476, guid: 5fb5d5b81ae3a68418e3360f9562e22d, type: 3}
       propertyPath: m_Name
       value: '#Player'
+      objectReference: {fileID: 0}
+    - target: {fileID: 2489648791401347476, guid: 5fb5d5b81ae3a68418e3360f9562e22d, type: 3}
+      propertyPath: m_TagString
+      value: Player
       objectReference: {fileID: 0}
     - target: {fileID: 2500158748440049473, guid: 5fb5d5b81ae3a68418e3360f9562e22d, type: 3}
       propertyPath: lane1
