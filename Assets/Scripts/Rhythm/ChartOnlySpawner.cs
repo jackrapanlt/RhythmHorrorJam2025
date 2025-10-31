@@ -170,7 +170,7 @@ public class ChartOnlySpawner : MonoBehaviour
             targetPos: targetPos,
             scheduledHitTime: n.hitTime,
             currentClock: nowClock,
-            useUnscaledTime: false // เมื่อ sync เพลง เราไม่ใช้ unscaled
+            useUnscaledTime: true // เมื่อ sync เพลง เราไม่ใช้ unscaled
         );
 
         m.lane = n.lane;

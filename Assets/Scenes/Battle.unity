@@ -508,7 +508,7 @@ MonoBehaviour:
   hp: {fileID: 151870419}
   stamina: {fileID: 488335785}
   player: {fileID: 1841130313}
-  cost: 100
+  cost: 200
   maxKills: 10
   intervalSeconds: 0.1
   gainStaminaOnUltimateKills: 0
@@ -603,7 +603,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 0, g: 0, b: 0, a: 0}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -2041,7 +2041,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 58550d963f130fe46a53fb13ee28197a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damageOnMiss: 5
+  damageOnMiss: 10
   player: {fileID: 1841130313}
   hp: {fileID: 151870419}
   staminaGainOnHit: 5
@@ -2405,7 +2405,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hp: {fileID: 151870419}
-  damageOnMiss: 10
+  damageOnMiss: 5
 --- !u!54 &2075032401
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2584,7 +2584,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1497661745346249600, guid: d075cd8bcdf2b154da679a1f1d961135, type: 3}
       propertyPath: m_Enabled
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3321751392805246102, guid: d075cd8bcdf2b154da679a1f1d961135, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2636,7 +2636,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5636643236687459648, guid: d075cd8bcdf2b154da679a1f1d961135, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 719.64
+      value: 723.23
       objectReference: {fileID: 0}
     - target: {fileID: 5636643236687459648, guid: d075cd8bcdf2b154da679a1f1d961135, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2724,6 +2724,10 @@ PrefabInstance:
       propertyPath: musicSounds.Array.size
       value: 4
       objectReference: {fileID: 0}
+    - target: {fileID: 7104466283671637246, guid: c5dfc8a0474567a409511653c961230f, type: 3}
+      propertyPath: sfxSound.Array.data[2].clip
+      value: 
+      objectReference: {fileID: 8300000, guid: 348d4b8ed3531db4192b56b13d963bfe, type: 3}
     - target: {fileID: 7104466283671637246, guid: c5dfc8a0474567a409511653c961230f, type: 3}
       propertyPath: musicSounds.Array.data[3].clip
       value: 
@@ -3487,7 +3491,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7994123095746657612, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
       propertyPath: maxHP
-      value: 1000
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 7994123095746657612, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
+      propertyPath: lerpSpeed
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7994123095746657612, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
+      propertyPath: maxStamina
+      value: 200
+      objectReference: {fileID: 0}
+    - target: {fileID: 7994123095746657612, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
+      propertyPath: startStamina
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7994123095746657612, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
+      propertyPath: staminaLerpSpeed
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 8150274709058051871, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
       propertyPath: m_AnchorMax.x

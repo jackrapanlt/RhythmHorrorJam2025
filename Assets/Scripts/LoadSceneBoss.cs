@@ -7,6 +7,7 @@ public class LoadSceneBoss : MonoBehaviour
 
     void Start()
     {
-        SceneManager.LoadScene(bossSceneName);
+        //SceneManager.LoadScene(bossSceneName);
+        GameOverController.Instance?.TriggerGameOver();
     }
 }
