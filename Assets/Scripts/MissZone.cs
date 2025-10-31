@@ -20,14 +20,14 @@ public class MissZone : MonoBehaviour
     {
         var m = other.GetComponentInParent<MonsterRhythm>();
         if (!m) return;
-        if (m.WasHit) return; // โดนตีไปแล้วไม่ถือว่า MISS
+        if (m.WasHit) return; 
 
-        // กันซ้ำ: 1 มอน = 1 MISS
+       
         int id = m.GetInstanceID();
         if (_missedOnce.Contains(id)) return;
         _missedOnce.Add(id);
 
-        // ---- ตัดสินเสียงจากผลลัพธ์ "หลังโดนมิสครั้งนี้" ----
+        
         string sfxToPlay = null;
         if (hp != null)
         {
@@ -57,5 +57,10 @@ public class MissZone : MonoBehaviour
         // ---- ทำดาเมจ & รีเซ็ตแรงค์ตามเดิม ----
         hp?.Damage(damageOnMiss);
         Ranking.Instance?.ResetToFirstRank();
+
+        HitZone.RaiseJudgement(JudgementType.Miss);
+
     }
+
+
 }

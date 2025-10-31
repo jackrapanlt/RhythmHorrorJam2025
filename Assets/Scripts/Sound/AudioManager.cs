@@ -108,4 +108,17 @@ public class AudioManager : MonoBehaviour
         PlayerPrefs.SetFloat(KEY_SFX_VOL, volume);
         PlayerPrefs.Save();
     }
+
+    // หยุด SFX ทั้งหมดที่กำลังเล่นอยู่บน sfxSource
+    public void StopAllSFX()
+    {
+        if (sfxSource) sfxSource.Stop();
+    }
+
+    // หยุดเพลงปัจจุบัน
+    public void StopMusic()
+    {
+        if (musicSource) musicSource.Stop();
+    }
+
 }

@@ -8,8 +8,10 @@ public interface IHittable { void Die(); }
 [RequireComponent(typeof(Rigidbody))]
 public class HitZone : MonoBehaviour
 {
-    // ★ เพิ่ม: อีเวนต์แจ้งผลตัดสินให้ระบบอื่น (เช่น TimePostFX) รับฟังได้
+ 
     public static event Action<JudgementType> OnJudgement;
+    //ดาเมจตีพลาด
+    [SerializeField] private int damageOnMiss = 5;
 
     [Header("Refs")]
     public Player player;
@@ -20,6 +22,8 @@ public class HitZone : MonoBehaviour
     [SerializeField] private float perfectWindow = 0.05f;  // วินาที
     [SerializeField] private float greatWindow = 0.12f;
     [SerializeField] private float passWindow = 0.22f;
+    [SerializeField] private float missWindow = 0.22f;
+
 
     private readonly List<IHittable> inside = new();
 
@@ -110,6 +114,9 @@ public class HitZone : MonoBehaviour
         if (offsetAbs <= perfectWindow) { Award(JudgementType.Perfect); }
         else if (offsetAbs <= greatWindow) { Award(JudgementType.Great); }
         else if (offsetAbs <= passWindow) { Award(JudgementType.Pass); }
+        else if (offsetAbs <= missWindow) { Award(JudgementType.Miss);;
+            Ranking.Instance?.ResetToFirstRank(); hp.Damage(damageOnMiss); ;
+        }
 
         // ล้างผู้ตายออกจากลิสต์ภายในโซน
         for (int i = inside.Count - 1; i >= 0; i--)
@@ -120,4 +127,10 @@ public class HitZone : MonoBehaviour
             if (mr == best) { inside.RemoveAt(i); break; }
         }
     }
+
+    public static void RaiseJudgement(JudgementType type)
+    {
+        OnJudgement?.Invoke(type);
+    }
+
 }

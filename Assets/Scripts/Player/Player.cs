@@ -14,8 +14,11 @@ public class Player : MonoBehaviour
     [SerializeField] private Animator animator;          // ใส่ Animator ของตัวละคร
     [SerializeField] private string attackTrigger = "Attack";
     [SerializeField] private string dieTrigger = "Die";
+    [SerializeField] private string hurtTrigger = "Hurt";   // ✅ เพิ่ม Trigger เจ็บตัว
     [SerializeField] private string dieStateName = "PlayerDie";
     [SerializeField, Range(0.8f, 1.2f)] private float dieEndNormalized = 0.98f;
+
+    public GameObject[] objectsSetActiveOnDie;
 
     private bool isDead = false;
     private bool gameOverSent = false;
@@ -32,6 +35,10 @@ public class Player : MonoBehaviour
             InputManager.Instance.OnSwitchLane += ToggleLane;
             InputManager.Instance.OnHit += OnHit;   // กดตี -> เล่น PlayerAttack (ตาม Animator)
         }
+
+        // ✅ ฟัง event จาก HP_Stamina ว่าถูกลดเลือด
+        if (HP_Stamina.Instance != null)
+            HP_Stamina.Instance.OnDamaged += OnPlayerDamaged;
     }
 
     private void OnDisable()
@@ -41,6 +48,9 @@ public class Player : MonoBehaviour
             InputManager.Instance.OnSwitchLane -= ToggleLane;
             InputManager.Instance.OnHit -= OnHit;
         }
+
+        if (HP_Stamina.Instance != null)
+            HP_Stamina.Instance.OnDamaged -= OnPlayerDamaged;
     }
 
     private void Update()
@@ -60,6 +70,14 @@ public class Player : MonoBehaviour
             {
                 animator.ResetTrigger(attackTrigger);
                 animator.SetTrigger(dieTrigger); // Any State -> PlayerDie
+
+                foreach (GameObject obj in objectsSetActiveOnDie)
+                {
+                    if (obj != null)
+                        obj.SetActive(false);
+                }
+                AudioManager.instance?.StopMusic();
+
             }
             else
             {
@@ -102,5 +120,18 @@ public class Player : MonoBehaviour
     {
         if (isDead) return;
         currentLane = (currentLane == 1) ? 2 : 1;
+    }
+
+    // ✅ ฟังก์ชันใหม่: เรียกเมื่อโดน Damage จาก HP_Stamina
+    private void OnPlayerDamaged(int dmg)
+    {
+        if (isDead) return;
+        if (!animator) return;
+
+        if (!string.IsNullOrEmpty(hurtTrigger))
+        {
+            animator.ResetTrigger(hurtTrigger);
+            animator.SetTrigger(hurtTrigger);
+        }
     }
 }

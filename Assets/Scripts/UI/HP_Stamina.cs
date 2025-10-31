@@ -6,6 +6,7 @@ using UnityEngine.Rendering.Universal;
 public class HP_Stamina : MonoBehaviour
 {
     public static HP_Stamina Instance { get; private set; }
+    public event System.Action<int> OnDamaged;
 
     [Header("HP")]
     [SerializeField] private int maxHP = 100;
@@ -61,7 +62,10 @@ public class HP_Stamina : MonoBehaviour
     {
         if (isGameOver) return;
         if (amount < 0) amount = 0;
+        int before = HP;
         SetHP(HP - amount);
+        if (HP < before)
+            OnDamaged?.Invoke(amount); // ยิง event ตอนโดนตี
     }
 
     public void Heal(int amount)
@@ -170,5 +174,6 @@ public class HP_Stamina : MonoBehaviour
         shownStamina01 = Mathf.MoveTowards(shownStamina01, target, Time.unscaledDeltaTime * staminaLerpSpeed);
         stamina.value = shownStamina01;
     }
+
 
 }

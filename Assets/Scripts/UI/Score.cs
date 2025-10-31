@@ -96,4 +96,4 @@ public class Score : MonoBehaviour
 }
 
 // ถ้าในโปรเจกต์มี enum นี้อยู่แล้ว ให้ลบบรรทัดล่างทิ้ง
-public enum JudgementType { Perfect, Great, Pass }
+public enum JudgementType { Perfect, Great, Pass ,Miss}
