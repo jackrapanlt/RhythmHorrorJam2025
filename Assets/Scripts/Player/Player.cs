@@ -11,10 +11,10 @@ public class Player : MonoBehaviour
     public int currentLane = 1; // 1 = lane1, 2 = lane2
 
     [Header("Animation")]
-    [SerializeField] private Animator animator;
+    [SerializeField] private Animator animator;          // ใส่ Animator ของตัวละคร
     [SerializeField] private string attackTrigger = "Attack";
     [SerializeField] private string dieTrigger = "Die";
-    [SerializeField] private string hurtTrigger = "Hurt";
+    [SerializeField] private string hurtTrigger = "Hurt";   // ✅ เพิ่ม Trigger เจ็บตัว
     [SerializeField] private string dieStateName = "PlayerDie";
     [SerializeField, Range(0.8f, 1.2f)] private float dieEndNormalized = 0.98f;
 
@@ -32,13 +32,11 @@ public class Player : MonoBehaviour
     {
         if (InputManager.Instance != null)
         {
-            // ✅ เปลี่ยนมาใช้ OnLane1 / OnLane2
-            InputManager.Instance.OnLane1 += GoLane1;
-            InputManager.Instance.OnLane2 += GoLane2;
-            InputManager.Instance.OnHit += OnHit;
+            InputManager.Instance.OnSwitchLane += ToggleLane;
+            InputManager.Instance.OnHit += OnHit;   // กดตี -> เล่น PlayerAttack (ตาม Animator)
         }
 
-        // ฟัง event จาก HP_Stamina ว่าถูกลดเลือด
+        // ✅ ฟัง event จาก HP_Stamina ว่าถูกลดเลือด
         if (HP_Stamina.Instance != null)
             HP_Stamina.Instance.OnDamaged += OnPlayerDamaged;
     }
@@ -47,8 +45,7 @@ public class Player : MonoBehaviour
     {
         if (InputManager.Instance != null)
         {
-            InputManager.Instance.OnLane1 -= GoLane1;
-            InputManager.Instance.OnLane2 -= GoLane2;
+            InputManager.Instance.OnSwitchLane -= ToggleLane;
             InputManager.Instance.OnHit -= OnHit;
         }
 
@@ -58,14 +55,11 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
-        // เคลื่อนระหว่างเลน
+        // เคลื่อนระหว่างเลน (Run/Idle)
         Transform target = (currentLane == 1) ? lane1 : lane2;
-        if (target != null)
-        {
-            Vector3 pos = transform.position;
-            pos.z = Mathf.Lerp(pos.z, target.position.z, Time.deltaTime * moveSpeed);
-            transform.position = pos;
-        }
+        Vector3 pos = transform.position;
+        pos.z = Mathf.Lerp(pos.z, target.position.z, Time.deltaTime * moveSpeed);
+        transform.position = pos;
 
         // ตรวจ HP = 0 -> เล่นอนิเมชันตายครั้งเดียว
         var hp = HP_Stamina.Instance;
@@ -75,22 +69,27 @@ public class Player : MonoBehaviour
             if (animator && !string.IsNullOrEmpty(dieTrigger))
             {
                 animator.ResetTrigger(attackTrigger);
-                animator.SetTrigger(dieTrigger);
+                animator.SetTrigger(dieTrigger); // Any State -> PlayerDie
 
                 foreach (GameObject obj in objectsSetActiveOnDie)
                 {
-                    if (obj != null) obj.SetActive(false);
+                    if (obj != null)
+                        obj.SetActive(false);
                 }
+                AudioManager.instance?.PlaySFX("Dying");
                 AudioManager.instance?.StopMusic();
+
+
             }
             else
             {
+                // ไม่มีอนิเมเตอร์ -> เรียก GameOver ทันที (กันค้าง)
                 GameOverController.Instance?.TriggerGameOver();
                 gameOverSent = true;
             }
         }
 
-        // รออนิเมชันตายเล่นจบก่อนค่อย Game Over
+        // เมื่อเข้าสเตต PlayerDie และเล่นจบจริง -> ค่อย Game Over
         if (isDead && !gameOverSent && animator)
         {
             var st = animator.GetCurrentAnimatorStateInfo(0);
@@ -108,8 +107,10 @@ public class Player : MonoBehaviour
 
     private void OnHit()
     {
-        if (isDead || !animator) return;
+        if (isDead) return;
+        if (!animator) return;
 
+        // ยิงทริกเกอร์ Attack
         if (!string.IsNullOrEmpty(attackTrigger))
         {
             animator.ResetTrigger(attackTrigger);
@@ -117,35 +118,22 @@ public class Player : MonoBehaviour
         }
     }
 
-    // ✅ เมธอดใหม่สำหรับรับปุ่ม W/D
-    private void GoLane1()
+    private void ToggleLane()
     {
         if (isDead) return;
-        currentLane = 1;
+        currentLane = (currentLane == 1) ? 2 : 1;
     }
 
-    private void GoLane2()
-    {
-        if (isDead) return;
-        currentLane = 2;
-    }
-
-    // เล่นอนิเมชันเจ็บเมื่อโดนดาเมจ
+    // ✅ ฟังก์ชันใหม่: เรียกเมื่อโดน Damage จาก HP_Stamina
     private void OnPlayerDamaged(int dmg)
     {
-        if (isDead || !animator) return;
+        if (isDead) return;
+        if (!animator) return;
 
         if (!string.IsNullOrEmpty(hurtTrigger))
         {
             animator.ResetTrigger(hurtTrigger);
             animator.SetTrigger(hurtTrigger);
         }
-    }
-
-    // (ออปชัน) เก็บไว้ใช้ที่อื่นได้ ถ้าอยากสลับเลนด้วยปุ่มเดียว
-    private void ToggleLane()
-    {
-        if (isDead) return;
-        currentLane = (currentLane == 1) ? 2 : 1;
     }
 }

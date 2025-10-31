@@ -515,7 +515,7 @@ MonoBehaviour:
   staminaGainPerUltimateHit: 5
   useCustomUltimateBaseScore: 1
   ultimateBaseScore: 5
-  ultimateJudgement: 1
+  ultimateJudgement: 0
 --- !u!1 &189575089
 GameObject:
   m_ObjectHideFlags: 0
@@ -2240,6 +2240,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 189575090}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1682543397 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 788237846358331882, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
+  m_PrefabInstance: {fileID: 8961423373087146825}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1718512600
 GameObject:
   m_ObjectHideFlags: 0
@@ -2338,13 +2343,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LowHPPostFX
   postVolume: {fileID: 1790867065}
-  startDelay: 1
+  playOnStart: 1
+  startDelay: 4
   stepIntervalSeconds: 1
   stepAmount: 0.01
-  fadeLerpSpeed: 0.1
+  fadeLerpSpeed: 0.25
+  initialVignette: 0
   deltaPerfect: -0.05
-  deltaGreat: -0.02
-  deltaPass: -0.01
+  deltaGreat: -0.03
+  deltaPass: -0.02
+  deltaMiss: 0.2
 --- !u!114 &1841130313 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2500158748440049473, guid: 5fb5d5b81ae3a68418e3360f9562e22d, type: 3}
@@ -3477,38 +3485,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 288193209}
     m_Modifications:
+    - target: {fileID: 788237846358331882, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 989896083965175564, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
       propertyPath: m_Name
       value: HP&Stamina
       objectReference: {fileID: 0}
-    - target: {fileID: 7892155243646532739, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 23
-      objectReference: {fileID: 0}
-    - target: {fileID: 7892155243646532739, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 13
-      objectReference: {fileID: 0}
     - target: {fileID: 7994123095746657612, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
-      propertyPath: maxHP
-      value: 100
-      objectReference: {fileID: 0}
-    - target: {fileID: 7994123095746657612, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
-      propertyPath: lerpSpeed
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 7994123095746657612, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
-      propertyPath: maxStamina
-      value: 200
-      objectReference: {fileID: 0}
-    - target: {fileID: 7994123095746657612, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
-      propertyPath: startStamina
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7994123095746657612, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
-      propertyPath: staminaLerpSpeed
-      value: 0.5
-      objectReference: {fileID: 0}
+      propertyPath: fire
+      value: 
+      objectReference: {fileID: 1682543397}
     - target: {fileID: 8150274709058051871, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -3516,14 +3504,6 @@ PrefabInstance:
     - target: {fileID: 8150274709058051871, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8447429524239947413, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 91
-      objectReference: {fileID: 0}
-    - target: {fileID: 8447429524239947413, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: -94
       objectReference: {fileID: 0}
     - target: {fileID: 8644714247813517363, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
       propertyPath: m_Pivot.x

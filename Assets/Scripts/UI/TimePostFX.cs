@@ -3,11 +3,11 @@ using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
 /// <summary>
-/// ควบคุมเอฟเฟกต์ Vignette แบบนับเวลา + ปรับลดเมื่อ Hit ดี:
-/// - ค่อย ๆ เพิ่มค่า Vignette จาก 0 → 1 เป็น "ขั้น" ทีละ stepAmount ทุก ๆ stepIntervalSeconds วินาที
-/// - เฟดมืดนุ่มด้วย MoveTowards ตาม fadeLerpSpeed
-/// - เมื่อ HitZone ตัดสิน: Perfect/Great/Pass จะลดความมืดลงตามค่าเซ็ตไว้
-/// - ไม่พึ่งพา HP_Stamina และไม่มี FilmGrain
+/// ควบคุมเอฟเฟกต์ Vignette:
+/// - ค่อย ๆ เพิ่มเป้าหมายความมืดเป็น "ขั้น" ทุก ๆ stepIntervalSeconds วินาที (ถ้าเปิดทำงาน)
+/// - เฟดค่าจริงเข้าหาเป้าหมายด้วย fadeLerpSpeed (ใช้ unscaled time)
+/// - เมื่อได้ Perfect/Great/Pass จะ "ลด" ความมืดลงตามค่า delta ที่ตั้ง
+/// - เมื่อ Miss จะ "เพิ่ม" ความมืดตามค่า deltaMiss
 /// </summary>
 public class TimePostFX : MonoBehaviour
 {
@@ -16,39 +16,37 @@ public class TimePostFX : MonoBehaviour
     [SerializeField] private Volume postVolume;
 
     [Header("Run Settings")]
-    [Tooltip("เริ่มทำงานอัตโนมัติเมื่อเริ่มซีน")]
-    private bool playOnStart = true;
+    [Tooltip("เริ่มทำงานอัตโนมัติเมื่อเริ่มซีน (เริ่มนับ step)")]
+    [SerializeField] private bool playOnStart = true;
 
-    [Tooltip("หน่วงเวลาเริ่มต้น (วินาที) ก่อนเริ่มไล่ค่า")]
+    [Tooltip("หน่วงเวลาเริ่มต้น (วินาที) ก่อนเริ่มนับ step")]
     [SerializeField] private float startDelay = 1f;
 
     [Tooltip("ช่วงเวลา (วินาที) ต่อการเพิ่มหนึ่งขั้น")]
     [SerializeField] private float stepIntervalSeconds = 1f;
 
-    [Tooltip("ขนาดการเพิ่มต่อขั้น (0..1) เช่น 0.1")]
-    [SerializeField, Range(0f, 1f)] private float stepAmount = .01f;
+    [Tooltip("ขนาดการเพิ่มต่อขั้น (0..1) เช่น 0.01")]
+    [SerializeField, Range(0f, 1f)] private float stepAmount = 0.01f;
 
     [Header("Smoothing")]
-    [Tooltip("ความเร็วการเฟดมืดระหว่างค่าปัจจุบัน → เป้าหมาย")]
-    [SerializeField, Range(0.1f, 30f)] private float fadeLerpSpeed = .1f;
+    [Tooltip("ความเร็วการเฟดค่าจริงเข้าหาเป้าหมาย")]
+    [SerializeField, Range(0.1f, 30f)] private float fadeLerpSpeed = 0.1f;
 
     [Header("Initial")]
-    [Tooltip("ค่าเริ่มต้นของ Vignette (ปกติ 0)")]
-    private float initialVignette = 0f;
+    [Tooltip("ค่าเริ่มต้นของ Vignette (0..1)")]
+    [SerializeField, Range(0f, 1f)] private float initialVignette = 0f;
 
-    [Header("Judgement reactions")]
-    [SerializeField, Tooltip("ลดความมืดเมื่อ Perfect (ค่าติดลบเพื่อลด)")]
-    private float deltaPerfect = -0.05f;
-    [SerializeField, Tooltip("ลดความมืดเมื่อ Great (ค่าติดลบเพื่อลด)")]
-    private float deltaGreat = -0.02f;
-    [SerializeField, Tooltip("ลดความมืดเมื่อ Pass (ค่าติดลบเพื่อลด)")]
-    private float deltaPass = -0.01f;
+    [Header("Judgement reactions (ค่าติดลบ = ทำให้สว่างขึ้น)")]
+    [SerializeField, Range(-1f, 1f)] private float deltaPerfect = -0.05f;
+    [SerializeField, Range(-1f, 1f)] private float deltaGreat = -0.02f;
+    [SerializeField, Range(-1f, 1f)] private float deltaPass = -0.01f;
+    [SerializeField, Range(-1f, 1f)] private float deltaMiss = 0.08f; // ✅ เพิ่มความมืดเมื่อ Miss
 
     // ---- internals ----
     private Vignette _vignette;
     private bool _ready;
     private bool _isRunning;
-    private float _target;        // ค่าที่อยากไป (เพิ่มเป็นขั้น ๆ จนถึง 1)
+    private float _target;        // ค่าเป้าหมาย (0..1)
     private float _stepTimer;     // จับเวลาระหว่างขั้น
     private float _delayTimer;    // หน่วงก่อนเริ่ม
 
@@ -60,7 +58,7 @@ public class TimePostFX : MonoBehaviour
 
     private void OnEnable()
     {
-        // ★ สมัครฟังอีเวนต์ผลตัดสินจาก HitZone
+        // ฟังผลตัดสินจาก HitZone
         HitZone.OnJudgement += OnJudged;
     }
 
@@ -78,7 +76,6 @@ public class TimePostFX : MonoBehaviour
 
         if (playOnStart)
         {
-            // รอ startDelay ก่อนค่อยเริ่มนับขั้น
             if (startDelay <= 0f) _isRunning = true;
         }
     }
@@ -87,7 +84,7 @@ public class TimePostFX : MonoBehaviour
     {
         if (!_ready) return;
 
-        // หน่วงก่อนเริ่ม (ถ้าตั้งค่าไว้)
+        // หน่วงก่อนเริ่ม
         if (!_isRunning && playOnStart && startDelay > 0f)
         {
             _delayTimer += Time.unscaledDeltaTime;
@@ -98,10 +95,10 @@ public class TimePostFX : MonoBehaviour
             }
         }
 
-        // เดินเวลาและเพิ่ม "ขั้น" ตาม interval
+        // เพิ่มเป้าหมายเป็นขั้น ๆ ตามเวลา
         if (_isRunning)
         {
-            float interval = Mathf.Max(0.01f, stepIntervalSeconds); // กัน 0
+            float interval = Mathf.Max(0.01f, stepIntervalSeconds);
             _stepTimer += Time.unscaledDeltaTime;
             if (_stepTimer >= interval)
             {
@@ -110,7 +107,7 @@ public class TimePostFX : MonoBehaviour
             }
         }
 
-        // เฟดนุ่มนวลเข้าหาค่าเป้าหมาย
+        // เฟดค่าจริงเข้าหาเป้าหมาย
         float dt = Time.unscaledDeltaTime * fadeLerpSpeed;
         float curr = _vignette.intensity.value;
         float next = Mathf.MoveTowards(curr, _target, dt);
@@ -118,13 +115,9 @@ public class TimePostFX : MonoBehaviour
     }
 
     // ---------- Public API ----------
-    /// <summary>เริ่มนับเวลาเพิ่มเป็นขั้น (ถ้าหยุดอยู่)</summary>
     public void StartStepping() => _isRunning = true;
-
-    /// <summary>หยุดนับเวลาชั่วคราว (ยังคงเฟดเข้าหาค่าเป้าหมายล่าสุด)</summary>
     public void PauseStepping() => _isRunning = false;
 
-    /// <summary>รีเซ็ตกลับไปที่ค่าเริ่มต้น (เลือกให้วางค่าทันที)</summary>
     public void ResetFX(bool applyImmediate = true)
     {
         _target = Mathf.Clamp01(initialVignette);
@@ -133,7 +126,6 @@ public class TimePostFX : MonoBehaviour
         if (applyImmediate) ApplyImmediate(_target);
     }
 
-    /// <summary>รีสตาร์ตใหม่จาก 0 และเริ่มนับเวลาใหม่</summary>
     public void RestartFromZero(bool applyImmediate = true)
     {
         _target = 0f;
@@ -143,14 +135,12 @@ public class TimePostFX : MonoBehaviour
         if (applyImmediate) ApplyImmediate(0f);
     }
 
-    /// <summary>ตั้งค่าพารามิเตอร์การนับขั้นแบบรวดเร็ว</summary>
     public void SetStepParameters(float intervalSeconds, float amount)
     {
         stepIntervalSeconds = Mathf.Max(0.01f, intervalSeconds);
         stepAmount = Mathf.Clamp01(amount);
     }
 
-    /// <summary>ตั้งค่าเป้าหมายเฉพาะกิจ (0..1) แล้วระบบจะเฟดไปหา</summary>
     public void SetTargetIntensity(float target01)
     {
         _target = Mathf.Clamp01(target01);
@@ -162,9 +152,9 @@ public class TimePostFX : MonoBehaviour
         float delta =
             (j == JudgementType.Perfect) ? deltaPerfect :
             (j == JudgementType.Great) ? deltaGreat :
-            (j == JudgementType.Pass) ? deltaPass : 0f;
+            (j == JudgementType.Pass) ? deltaPass :
+            /* j == Miss */                 deltaMiss;
 
-        // ปรับเป้าหมายลง (ทำให้ภาพ "สว่างขึ้น") แล้วเฟดไปหาด้วยความเร็วเดิม
         _target = Mathf.Clamp01(_target + delta);
     }
 
@@ -176,7 +166,7 @@ public class TimePostFX : MonoBehaviour
 
         if (!postVolume || !postVolume.profile) return;
 
-        // พยายามดึง Vignette จากโปรไฟล์ ถ้าไม่มีจะสร้างใหม่
+        // พยายามดึง Vignette จากโปรไฟล์ ถ้าไม่มีจะสร้าง
         if (!postVolume.profile.TryGet(out _vignette))
         {
             _vignette = postVolume.profile.Add<Vignette>(true);

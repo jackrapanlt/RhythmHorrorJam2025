@@ -14,24 +14,34 @@ public class HP_Stamina : MonoBehaviour
     public int HP { get; private set; }
 
     [Header("HP UI")]
-    [SerializeField] private Slider hpSlider;        // ถ้า sliderIs01=true: ตั้ง Min=0, Max=1
-    [SerializeField] private bool sliderIs01 = true; // ใช้สเกล 0..1 สำหรับ Slider
-    [SerializeField] private float lerpSpeed = 10f;  // ความเร็วการเฟดของสไลเดอร์ HP
+    [SerializeField] private Slider hpSlider;
+    [SerializeField] private bool sliderIs01 = true;
+    [SerializeField] private float lerpSpeed = 10f;
     private float shownHP01 = 1f;
 
     // -------------------- Stamina --------------------
     [Header("Stamina")]
-    [SerializeField] private Slider stamina;         // ตั้ง Min=0, Max=1 (Value 1 = 100)
+    [SerializeField] private Slider stamina; // Min=0, Max=1
     [SerializeField] private int maxStamina = 100;
     [SerializeField] private int startStamina = 0;
     [SerializeField] private float staminaLerpSpeed = 10f;
     public int Stamina { get; private set; }
     private float shownStamina01 = 0f;
 
-    // -------------------- State --------------------
+    // >>>>>>>>>>>>>>>>>>> ADD: Fire toggle <<<<<<<<<<<<<<<<<<
+    [Header("Fire FX Toggle")]
+    [Tooltip("ใส่ GameObject ไฟ/เอฟเฟกต์ ที่อยากให้ติดเมื่อสแตมินาเต็ม")]
+    [SerializeField] private GameObject fire;
+    [Tooltip("ถ้าติ๊ก จะถือว่า 'เต็ม' เมื่อ Stamina == maxStamina เท่านั้น")]
+    [SerializeField] private bool requireExactFull = true;
+    [Tooltip("ถ้าไม่ติ๊กด้านบน จะถือว่า 'เต็ม' เมื่อเปอร์เซ็นต์สแตมินา >= เกณฑ์นี้ (เช่น 0.999)")]
+    [Range(0f, 1f)]
+    [SerializeField] private float fullThreshold01 = 0.999f;
+
+    // -------------------------------------------------
+
     private bool isGameOver;
 
-    // -------------------- Lifecycle --------------------
     private void Awake()
     {
         if (Instance && Instance != this) { Destroy(gameObject); return; }
@@ -49,6 +59,9 @@ public class HP_Stamina : MonoBehaviour
         Stamina = Mathf.Clamp(startStamina, 0, maxStamina);
         shownStamina01 = GetStamina01();
         UpdateStaminaImmediate();
+
+        // >>> ADD: อัปเดตสถานะ Fire ตอนเริ่ม <<<
+        UpdateFireActive();
     }
 
     private void Update()
@@ -65,7 +78,7 @@ public class HP_Stamina : MonoBehaviour
         int before = HP;
         SetHP(HP - amount);
         if (HP < before)
-            OnDamaged?.Invoke(amount); // ยิง event ตอนโดนตี
+            OnDamaged?.Invoke(amount);
     }
 
     public void Heal(int amount)
@@ -93,7 +106,6 @@ public class HP_Stamina : MonoBehaviour
     }
 
     // -------------------- Public API: Stamina --------------------
-    /// <summary>เพิ่มสแตมินาเป็น “คะแนน” (1 คะแนน = 0.01 บนสไลเดอร์ Max=1)</summary>
     public void GainStamina(int amount)
     {
         if (amount < 0) amount = 0;
@@ -104,6 +116,9 @@ public class HP_Stamina : MonoBehaviour
     {
         Stamina = Mathf.Clamp(value, 0, maxStamina);
         UpdateStaminaImmediate();
+
+        // >>> ADD: ทุกครั้งที่สแตมินาเปลี่ยน ให้เช็ค Fire <<<
+        UpdateFireActive();
     }
 
     public void BindStaminaSlider(Slider s)
@@ -161,7 +176,7 @@ public class HP_Stamina : MonoBehaviour
     {
         if (!stamina) return;
         stamina.minValue = 0f;
-        stamina.maxValue = 1f;            // “Value 1 = 100”
+        stamina.maxValue = 1f;
         float v = GetStamina01();
         stamina.value = v;
         shownStamina01 = v;
@@ -173,7 +188,19 @@ public class HP_Stamina : MonoBehaviour
         float target = GetStamina01();
         shownStamina01 = Mathf.MoveTowards(shownStamina01, target, Time.unscaledDeltaTime * staminaLerpSpeed);
         stamina.value = shownStamina01;
+        // หมายเหตุ: ใช้ค่า "จริง" (Stamina) สำหรับตัดสินใจเปิดไฟอยู่แล้ว จึงไม่ต้องเรียก UpdateFireActive ที่นี่
     }
 
+    // >>>>>>>>>>>>>>>>>>> ADD: เมธอดสลับ Fire <<<<<<<<<<<<<<<<<<
+    private void UpdateFireActive()
+    {
+        if (!fire) return;
 
+        bool isFull = requireExactFull
+            ? (Stamina >= maxStamina)                               // เต็มแบบเป๊ะ
+            : (GetStamina01() >= fullThreshold01);                  // หรือใช้เกณฑ์เปอร์เซ็นต์
+
+        if (fire.activeSelf != isFull)
+            fire.SetActive(isFull);
+    }
 }

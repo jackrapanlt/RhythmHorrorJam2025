@@ -8,50 +8,37 @@ public class InputManager : MonoBehaviour
     public static InputManager Instance { get; private set; }
 
     // Events
-    public event Action OnLane1;       // กด W
-    public event Action OnLane2;       // กด D
-    public event Action OnHit;         // ตี
-    public event Action OnUltimate;    // สกิลพิเศษ
+    public event Action OnSwitchLane;  
+    public event Action OnHit;         
+    public event Action OnUltimate;    
     public static event Action EscPressed;
 
     // Input Actions
-    private InputAction actionLane1;
-    private InputAction actionLane2;
+    private InputAction actionSwitchLane;
     private InputAction actionHit;
     private InputAction actionUltimate;
     private InputAction actionEsc;
 
     private void Awake()
     {
-        if (Instance && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
+        if (Instance && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        // Lane 1 (W)
-        actionLane1 = new InputAction("Lane1", binding: "<Keyboard>/w");
+        //Toggle Lane
+        actionSwitchLane = new InputAction("SwitchLane", binding: "<Keyboard>/s");
 
-        // Lane 2 (D)
-        actionLane2 = new InputAction("Lane2", binding: "<Keyboard>/d");
-
-        // Hit (K หรือ O)
+        // Hit
         actionHit = new InputAction("Hit");
         actionHit.AddBinding("<Keyboard>/k");
-        actionHit.AddBinding("<Keyboard>/o");
+        actionHit.AddBinding("<Keyboard>/l");
 
-        // Ultimate (Space)
+     
         actionUltimate = new InputAction("Ultimate", binding: "<Keyboard>/space");
-
-        // Esc
         actionEsc = new InputAction("Esc", InputActionType.Button, "<Keyboard>/escape");
 
-        // Subscribe event
-        actionLane1.performed += _ => OnLane1?.Invoke();
-        actionLane2.performed += _ => OnLane2?.Invoke();
+        // Subscribe
+        actionSwitchLane.performed += _ => OnSwitchLane?.Invoke();
         actionHit.performed += _ => OnHit?.Invoke();
         actionUltimate.performed += _ => OnUltimate?.Invoke();
         actionEsc.performed += _ => EscPressed?.Invoke();
@@ -59,8 +46,7 @@ public class InputManager : MonoBehaviour
 
     private void OnEnable()
     {
-        actionLane1.Enable();
-        actionLane2.Enable();
+        actionSwitchLane.Enable();
         actionHit.Enable();
         actionUltimate.Enable();
         actionEsc.Enable();
@@ -68,8 +54,7 @@ public class InputManager : MonoBehaviour
 
     private void OnDisable()
     {
-        actionLane1.Disable();
-        actionLane2.Disable();
+        actionSwitchLane.Disable();
         actionHit.Disable();
         actionUltimate.Disable();
         actionEsc.Disable();
