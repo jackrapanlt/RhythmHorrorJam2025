@@ -82,6 +82,8 @@ public class GameManager : MonoBehaviour
 
         var active = SceneManager.GetActiveScene();
         SceneManager.LoadScene(active.buildIndex, LoadSceneMode.Single);
+
+
     }
 
     // ★ เรียกครั้งเดียวหลังซีนรีโหลดเสร็จ เพื่อเล่นเพลงล่าสุดกลับมา

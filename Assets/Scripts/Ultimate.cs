@@ -8,28 +8,33 @@ public class Ultimate : MonoBehaviour
     private Ultimate instance;
 
     [Header("Refs")]
-    [SerializeField] private HP_Stamina hp;    // ใช้เช็ค/หักสแตมินา และ +สแตมินาเมื่อ “นับเป็น Hit”
-    [SerializeField] private Slider stamina;  
-    [SerializeField] private Player player;   
+    [SerializeField] private HP_Stamina hp;
+    [SerializeField] private Slider stamina;
+    [SerializeField] private Player player;
+    [SerializeField] private TimePostFX timePostFX;  // ✅ อ้างอิง TimePostFX เพื่อปรับ Vignette
 
     [Header("Cost & Flow")]
-    [SerializeField] private int cost = 100;                // ใช้ได้เมื่อ >= 100
-    [SerializeField] private int maxKills = 10;             // พยายามทำลายสูงสุด 10 ตัว
-    [SerializeField] private float intervalSeconds = 0.5f;  // ห่างกันตัวละ 0.5 วิ (รวม ~5 วิ)
+    [SerializeField] private int cost = 100;
+    [SerializeField] private int maxKills = 10;
+    [SerializeField] private float intervalSeconds = 0.5f;
+
+    [Header("Ultimate Visual FX")]
+    [Tooltip("เวลาที่ใช้ค่อยๆ เฟดความมืดของ Vignette ให้หาย (วินาที)")]
+    [SerializeField, Range(0.1f, 5f)] private float vignetteFadeDuration = 1.5f;
 
     [Header("Hit Simulation")]
     [SerializeField] private bool gainStaminaOnUltimateKills = false;
-    [SerializeField] private int staminaGainPerUltimateHit = 5; // +สแตมินาต่อการกำจัด 1 ตัว
+    [SerializeField] private int staminaGainPerUltimateHit = 5;
 
     [Header("Ultimate Scoring")]
-    [SerializeField] private bool useCustomUltimateBaseScore = false; 
-    [SerializeField] private int ultimateBaseScore = 5;              
+    [SerializeField] private bool useCustomUltimateBaseScore = false;
+    [SerializeField] private int ultimateBaseScore = 5;
     [SerializeField] private JudgementType ultimateJudgement = JudgementType.Great;
+
     private bool isRunning;
 
     private void Awake()
     {
-
         if (instance != null && instance != this)
         {
             Destroy(gameObject);
@@ -41,6 +46,7 @@ public class Ultimate : MonoBehaviour
 
         if (!hp) hp = FindAnyObjectByType<HP_Stamina>(FindObjectsInactive.Include);
         if (!player) player = FindAnyObjectByType<Player>(FindObjectsInactive.Include);
+        if (!timePostFX) timePostFX = FindAnyObjectByType<TimePostFX>(FindObjectsInactive.Include);
     }
 
     private void OnEnable()
@@ -60,15 +66,16 @@ public class Ultimate : MonoBehaviour
         if (isRunning) return;
         if (!CanUse()) return;
 
-        // หักสแตมินาทันทีกันสแปม
-        SpendCost();
+        // ✅ เริ่มคอร์รูทีนค่อยๆ เฟด Vignette ให้หาย
+        if (timePostFX != null)
+            StartCoroutine(FadeOutVignette());
 
+        SpendCost();
         StartCoroutine(CoUltimate());
     }
 
     private bool CanUse()
     {
-        // เช็ค HP_Stamina (มี int Stamina ไหม)
         if (hp != null)
         {
             var prop = hp.GetType().GetProperty("Stamina", BindingFlags.Instance | BindingFlags.Public);
@@ -79,9 +86,7 @@ public class Ultimate : MonoBehaviour
             }
         }
 
-        // หรือเช็คสไลเดอร์โดยตรง (1.0 = เต็ม 100)
         if (stamina != null && stamina.value >= 1f) return true;
-
         return false;
     }
 
@@ -102,7 +107,6 @@ public class Ultimate : MonoBehaviour
 
         if (stamina != null)
         {
-            // ลด 100 แต้ม = 1.0 บนสไลเดอร์
             stamina.value = Mathf.Clamp01(stamina.value - 1f);
         }
     }
@@ -116,44 +120,23 @@ public class Ultimate : MonoBehaviour
             var target = FindNextTarget();
             if (target != null)
             {
-                // === ทำให้ “นับเหมือน HitZone.TryHit()” ===
+                try { target.MarkHit(); } catch { }
 
-                // 1) กัน MISS ภายหลัง (ถ้าคลาสคุณมีเมทอดนี้)
-                try { target.MarkHit(); } catch { /* ignore if not available */ }
-
-                // 2) บวกสแตมินาเหมือนโดนใน HitZone
                 if (gainStaminaOnUltimateKills && staminaGainPerUltimateHit > 0)
                     hp?.GainStamina(staminaGainPerUltimateHit);
 
-                // 3) คำนวณคะแนนพื้นฐานของ Ultimate
-                int baseScore;
-                if (useCustomUltimateBaseScore)
-                {
-                    baseScore = ultimateBaseScore; // ใช้คะแนนเฉพาะของ Ultimate
-                }
-                else
-                {
-                    baseScore = (Score.Instance != null)
-                        ? Score.Instance.GetBaseScore(ultimateJudgement)   // ใช้ Judgement ที่กำหนด
-                        : 0;
-                }
+                int baseScore = useCustomUltimateBaseScore
+                    ? ultimateBaseScore
+                    : (Score.Instance != null ? Score.Instance.GetBaseScore(ultimateJudgement) : 0);
 
-                // ให้ Ranking เป็นคนคูณแล้วส่งเข้า Score
                 if (Ranking.Instance != null)
                     Ranking.Instance.ApplyHitToScore(baseScore);
                 else
                     Score.Instance?.AddScore(baseScore);
 
-              
                 var hittable = target as IHittable;
                 if (hittable != null) hittable.Die();
                 else Destroy(target.gameObject);
-
-                Debug.Log($"ULTIMATE {i}/{maxKills} (counted as Hit, base={baseScore})");
-            }
-            else
-            {
-                Debug.Log($"ULTIMATE {i}/{maxKills}: no target");
             }
 
             if (i < maxKills)
@@ -168,7 +151,6 @@ public class Ultimate : MonoBehaviour
         var arr = FindObjectsByType<MonsterRhythm>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
         if (arr == null || arr.Length == 0) return null;
 
-        // เลือกใกล้ผู้เล่นสุด (ถ้ามี player) ไม่งั้นตัวแรก
         if (!player) return arr[0];
 
         MonsterRhythm best = null;
@@ -182,5 +164,33 @@ public class Ultimate : MonoBehaviour
             if (d < bestDist) { best = m; bestDist = d; }
         }
         return best;
+    }
+
+    // ✅ ค่อยๆ เฟดให้ Vignette หายไป
+    private IEnumerator FadeOutVignette()
+    {
+        var field = typeof(TimePostFX).GetField("_vignette", BindingFlags.NonPublic | BindingFlags.Instance);
+        if (field == null) yield break;
+
+        var vignette = field.GetValue(timePostFX) as UnityEngine.Rendering.Universal.Vignette;
+        if (vignette == null) yield break;
+
+        float startValue = vignette.intensity.value;
+        float t = 0f;
+
+        while (t < vignetteFadeDuration)
+        {
+            t += Time.unscaledDeltaTime;
+            float k = Mathf.Clamp01(t / vignetteFadeDuration);
+            float newValue = Mathf.Lerp(startValue, 0f, k);
+
+            timePostFX.SetTargetIntensity(newValue);
+            vignette.intensity.value = newValue; // อัปเดตค่าแบบเรียลไทม์
+            yield return null;
+        }
+
+        vignette.intensity.value = 0f;
+        timePostFX.SetTargetIntensity(0f);
+        Debug.Log("[Ultimate] Vignette เฟดหายจนสว่างเต็มจอ");
     }
 }
