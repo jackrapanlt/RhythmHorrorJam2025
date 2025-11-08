@@ -3480,7 +3480,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7994123095746657612, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
       propertyPath: maxHP
+<<<<<<< HEAD
+<<<<<<< Updated upstream
+      value: 10
+=======
+      value: 250
+>>>>>>> Stashed changes
+=======
       value: 10000
+>>>>>>> parent of d4b14ef (31/10/ 00:27)
       objectReference: {fileID: 0}
     - target: {fileID: 8150274709058051871, guid: 49dd3261c1ada224b98d29ec86458598, type: 3}
       propertyPath: m_AnchorMax.x
@@ -3655,6 +3663,17 @@ SceneRoots:
   - {fileID: 189575090}
   - {fileID: 288193209}
   - {fileID: 972915538795494637}
+<<<<<<< HEAD
+<<<<<<< HEAD
   - {fileID: 2016832908}
+<<<<<<< HEAD
   - {fileID: 8151211960702403914}
   - {fileID: 1275445131}
+=======
+  - {fileID: 7298587813019090097}
+=======
+>>>>>>> Dui
+=======
+  - {fileID: 2016832908}
+>>>>>>> parent of d4b14ef (31/10/ 00:27)
+>>>>>>> origin/Dui4
